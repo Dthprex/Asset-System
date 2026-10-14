@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fdfbf9;
+  --foreground: #1d2939;
+  --card: #ffffff;
+  --card-foreground: #1d2939;
+  --border: #f0e6de;
+  --brand-primary: #c28551;
+  --brand-primary-hover: #b07440;
+  --brand-light: #fbf5ef;
+  --brand-border: #ead7c7;
+  --brand-navy: #1d2939;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom delicate luxury scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f7f3ee;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d9c4b2;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c28551;
+}
+
+/* Hide scrollbar for category pills on horizontal scroll */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Soft luxurious card shadows matching cosmetics.lk gold aesthetic */
+.luxury-card-shadow {
+  box-shadow: 0 1px 3px 0 rgba(194, 133, 81, 0.04), 0 1px 2px -1px rgba(194, 133, 81, 0.04);
+}
+
+.luxury-card-hover {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.luxury-card-hover:hover {
+  box-shadow: 0 10px 25px -5px rgba(194, 133, 81, 0.12), 0 8px 10px -6px rgba(194, 133, 81, 0.06);
+  border-color: #dfae85;
+  transform: translateY(-1px);
+}
+
+/* Print styles for QR Asset Labels */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area * {
+    visibility: visible;
+  }
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

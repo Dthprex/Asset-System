@@ -1,0 +1,515 @@
+{
+  "branches": [
+    {
+      "id": "BR-01",
+      "name": "Colombo Flagship Showroom (Galle Rd)",
+      "code": "COL-FLAG",
+      "type": "Showroom"
+    },
+    {
+      "id": "BR-02",
+      "name": "Kandy City Centre Branch",
+      "code": "KCC-01",
+      "type": "Showroom"
+    },
+    {
+      "id": "BR-03",
+      "name": "One Galle Face Mall Kiosk",
+      "code": "OGF-01",
+      "type": "Outlet"
+    },
+    {
+      "id": "BR-04",
+      "name": "Negombo Branch",
+      "code": "NEG-01",
+      "type": "Showroom"
+    },
+    {
+      "id": "BR-05",
+      "name": "Kurunegala Branch",
+      "code": "KUR-01",
+      "type": "Showroom"
+    },
+    {
+      "id": "BR-06",
+      "name": "Head Office - Nawala (HQ)",
+      "code": "HQ-NAWALA",
+      "type": "Head Office"
+    },
+    {
+      "id": "BR-07",
+      "name": "Central Warehouse & Logistics (Kelaniya)",
+      "code": "WH-KEL",
+      "type": "Warehouse"
+    },
+    {
+      "id": "BR-08",
+      "name": "IT Lab & Staging Area",
+      "code": "IT-LAB",
+      "type": "IT Department"
+    }
+  ],
+  "departments": [
+    {
+      "id": "DEP-01",
+      "name": "Digital Marketing & Content Creation"
+    },
+    {
+      "id": "DEP-02",
+      "name": "IT & Systems Infrastructure"
+    },
+    {
+      "id": "DEP-03",
+      "name": "Retail Showrooms & Operations"
+    },
+    {
+      "id": "DEP-04",
+      "name": "E-Commerce & Online Orders"
+    },
+    {
+      "id": "DEP-05",
+      "name": "Finance, Accounts & Procurement"
+    },
+    {
+      "id": "DEP-06",
+      "name": "Human Resources & Administration"
+    },
+    {
+      "id": "DEP-07",
+      "name": "Logistics, Packing & Delivery"
+    },
+    {
+      "id": "DEP-08",
+      "name": "Customer Experience & Hotline"
+    }
+  ],
+  "assets": [
+    {
+      "id": "AST-1001",
+      "assetTag": "CLK-IT-2025-001",
+      "name": "MacBook Pro 14\" (Apple M2 Pro, 16GB, 512GB)",
+      "category": "Laptop",
+      "brand": "Apple",
+      "modelNumber": "MPHE3LL/A - A2779",
+      "serialNumber": "C02GN0AAQ6L4",
+      "hasSim": false,
+      "imei1": "",
+      "imei2": "",
+      "condition": "Brand New",
+      "purchaseDate": "2025-03-10",
+      "warrantyEndDate": "2027-03-10",
+      "purchaseLocation": "Future World Colombo 03",
+      "purchaseAmount": 685000,
+      "currency": "LKR",
+      "invoiceDoc": "/uploads/sample-invoice-macbook.png",
+      "images": [
+        "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "ALLOCATED_PERMANENT",
+      "currentAssignment": {
+        "assignmentType": "PERMANENT_EMPLOYEE",
+        "assignedToName": "Senuri Wickramasinghe",
+        "assignedToRole": "Lead Video Producer & Motion Designer",
+        "assignedToContact": "+94 77 123 4567 | senuri@cosmetics.lk",
+        "assignedDate": "2025-09-01",
+        "expectedReturnDate": "",
+        "locationOrBranch": "Head Office - Nawala (HQ)",
+        "department": "Digital Marketing & Content Creation",
+        "purpose": "4K cosmetics product video shoots, campaign grading & video rendering",
+        "notes": "Includes 67W USB-C power brick and braided MagSafe 3 cable."
+      },
+      "createdAt": "2025-03-10T10:00:00.000Z",
+      "updatedAt": "2025-09-01T09:30:00.000Z"
+    },
+    {
+      "id": "AST-1002",
+      "assetTag": "CLK-IT-2025-002",
+      "name": "Sony Alpha 7 IV Full-Frame Camera + 24-70mm GM Lens",
+      "category": "Camera",
+      "brand": "Sony",
+      "modelNumber": "ILCE-7M4K",
+      "serialNumber": "S01-9874512B",
+      "hasSim": false,
+      "imei1": "",
+      "imei2": "",
+      "condition": "Brand New",
+      "purchaseDate": "2025-06-15",
+      "warrantyEndDate": "2027-06-15",
+      "purchaseLocation": "CameraLK Colombo 05",
+      "purchaseAmount": 920000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "BORROWED_TEMPORARY",
+      "currentAssignment": {
+        "assignmentType": "TEMPORARY_BORROW",
+        "assignedToName": "Kaveen Dias",
+        "assignedToRole": "Social Media & TikTok Specialist",
+        "assignedToContact": "+94 71 889 0012 | kaveen@cosmetics.lk",
+        "assignedDate": "2026-10-10",
+        "expectedReturnDate": "2026-10-18",
+        "locationOrBranch": "Colombo Flagship Showroom (Galle Rd)",
+        "department": "Digital Marketing & Content Creation",
+        "purpose": "Annual Glamour Glow cosmetics store product launch photography and Reels creation",
+        "notes": "Handed over with 2x Sony NP-FZ100 batteries, 128GB Tough SD card, and camera bag."
+      },
+      "createdAt": "2025-06-15T11:20:00.000Z",
+      "updatedAt": "2026-10-10T14:00:00.000Z"
+    },
+    {
+      "id": "AST-1003",
+      "assetTag": "CLK-IT-2025-003",
+      "name": "Samsung Galaxy Tab S9 FE 5G (Dual SIM)",
+      "category": "Tablet",
+      "brand": "Samsung",
+      "modelNumber": "SM-X516B (128GB Mint)",
+      "serialNumber": "R52X40098PL",
+      "hasSim": true,
+      "imei1": "354891104829103",
+      "imei2": "354891104829104",
+      "condition": "Brand New",
+      "purchaseDate": "2025-08-20",
+      "warrantyEndDate": "2026-08-20",
+      "purchaseLocation": "Singer Mega Colombo 04",
+      "purchaseAmount": 195000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "ALLOCATED_PERMANENT",
+      "currentAssignment": {
+        "assignmentType": "LOCATION_SHOWROOM",
+        "assignedToName": "Colombo Flagship POS Counter 1",
+        "assignedToRole": "Showroom Cashier & Beauty Advisor Stand",
+        "assignedToContact": "011 250 8890 | showroom.col@cosmetics.lk",
+        "assignedDate": "2025-08-25",
+        "expectedReturnDate": "",
+        "locationOrBranch": "Colombo Flagship Showroom (Galle Rd)",
+        "department": "Retail Showrooms & Operations",
+        "purpose": "Customer digital skin consultation app & retail loyalty points signup counter",
+        "notes": "Mounted on anti-theft security tablet stand with S-Pen attached."
+      },
+      "createdAt": "2025-08-20T08:00:00.000Z",
+      "updatedAt": "2025-08-25T10:00:00.000Z"
+    },
+    {
+      "id": "AST-1004",
+      "assetTag": "CLK-IT-2025-004",
+      "name": "Samsung Galaxy A54 5G (Awesome Lime, Dual SIM)",
+      "category": "Mobile Phone",
+      "brand": "Samsung",
+      "modelNumber": "SM-A546E/DS (256GB)",
+      "serialNumber": "SM-A546E-77821",
+      "hasSim": true,
+      "imei1": "864501048123001",
+      "imei2": "864501048123002",
+      "condition": "Used - Good",
+      "purchaseDate": "2025-07-12",
+      "warrantyEndDate": "2026-07-12",
+      "purchaseLocation": "Doctor Mobile / Certified Refurbished Bambalapitiya",
+      "purchaseAmount": 98000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "ALLOCATED_PERMANENT",
+      "currentAssignment": {
+        "assignmentType": "DEPARTMENT_SHARED",
+        "assignedToName": "Oshadi Silva (Customer Service Team Lead)",
+        "assignedToRole": "Customer Care & WhatsApp Order Desk",
+        "assignedToContact": "+94 77 990 0110 | support@cosmetics.lk",
+        "assignedDate": "2025-07-15",
+        "expectedReturnDate": "",
+        "locationOrBranch": "Head Office - Nawala (HQ)",
+        "department": "Customer Experience & Hotline",
+        "purpose": "Official cosmetics.lk WhatsApp Business customer hotline & delivery confirmation",
+        "notes": "Company Dialog SIM in Slot 1 (0779900110), Mobitel SIM in Slot 2."
+      },
+      "createdAt": "2025-07-12T15:00:00.000Z",
+      "updatedAt": "2025-07-15T09:15:00.000Z"
+    },
+    {
+      "id": "AST-1005",
+      "assetTag": "CLK-IT-2025-005",
+      "name": "Dell OptiPlex 7090 Micro Desktop + Dell 24\" IPS Monitor",
+      "category": "Desktop",
+      "brand": "Dell",
+      "modelNumber": "OptiPlex 7090 MFF (Core i7 11th Gen, 16GB, 512GB SSD)",
+      "serialNumber": "DL-992384-LK",
+      "hasSim": false,
+      "imei1": "",
+      "imei2": "",
+      "condition": "Brand New",
+      "purchaseDate": "2025-02-14",
+      "warrantyEndDate": "2028-02-14",
+      "purchaseLocation": "Redline Technologies Colombo 04",
+      "purchaseAmount": 345000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1587831990711-23ca6441447b?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "ALLOCATED_PERMANENT",
+      "currentAssignment": {
+        "assignmentType": "DEPARTMENT_SHARED",
+        "assignedToName": "Manjula Ranasinghe",
+        "assignedToRole": "Senior Accountant",
+        "assignedToContact": "011 432 1199 | accounts@cosmetics.lk",
+        "assignedDate": "2025-02-18",
+        "expectedReturnDate": "",
+        "locationOrBranch": "Head Office - Nawala (HQ)",
+        "department": "Finance, Accounts & Procurement",
+        "purpose": "ERP accounting software, supplier payments & tax reporting",
+        "notes": "Equipped with UPS power backup, wireless Dell keyboard & mouse."
+      },
+      "createdAt": "2025-02-14T11:00:00.000Z",
+      "updatedAt": "2025-02-18T10:00:00.000Z"
+    },
+    {
+      "id": "AST-1006",
+      "assetTag": "CLK-IT-2025-006",
+      "name": "Apple iPad 10th Gen 10.9\" (Wi-Fi + Cellular, 64GB Blue)",
+      "category": "Tablet",
+      "brand": "Apple",
+      "modelNumber": "MQ6K3LL/A - A2757",
+      "serialNumber": "DMPY801KL8",
+      "hasSim": true,
+      "imei1": "359124104928120",
+      "imei2": "",
+      "condition": "Used - Good",
+      "purchaseDate": "2025-04-18",
+      "warrantyEndDate": "2026-04-18",
+      "purchaseLocation": "Abans PLC Colombo 03",
+      "purchaseAmount": 165000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1561154464-82e9adf32764?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "AVAILABLE",
+      "currentAssignment": null,
+      "createdAt": "2025-04-18T09:00:00.000Z",
+      "updatedAt": "2026-10-01T16:00:00.000Z"
+    },
+    {
+      "id": "AST-1007",
+      "assetTag": "CLK-IT-2025-007",
+      "name": "Lenovo ThinkPad E14 Gen 4 (Core i5 12th Gen, 16GB, 512GB)",
+      "category": "Laptop",
+      "brand": "Lenovo",
+      "modelNumber": "21E3006TSP",
+      "serialNumber": "PF3KZ099-LK",
+      "hasSim": false,
+      "imei1": "",
+      "imei2": "",
+      "condition": "Damaged / Needs Repair",
+      "purchaseDate": "2025-01-20",
+      "warrantyEndDate": "2027-01-20",
+      "purchaseLocation": "Softlogic Information Technologies",
+      "purchaseAmount": 295000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "UNDER_REPAIR",
+      "currentAssignment": {
+        "assignmentType": "DEPARTMENT_SHARED",
+        "assignedToName": "Sent to Softlogic Service Center",
+        "assignedToRole": "Service Ticket #SRV-99812",
+        "assignedToContact": "011 555 7800 (Technician: Ruwan)",
+        "assignedDate": "2026-10-05",
+        "expectedReturnDate": "2026-10-22",
+        "locationOrBranch": "IT Lab & Staging Area",
+        "department": "IT & Systems Infrastructure",
+        "purpose": "Warranty repair: Liquid damage on spacebar and unresponsive trackpad",
+        "notes": "Handed over on 2026-10-05. Awaiting quotation or warranty parts approval."
+      },
+      "createdAt": "2025-01-20T10:00:00.000Z",
+      "updatedAt": "2026-10-05T11:00:00.000Z"
+    },
+    {
+      "id": "AST-1008",
+      "assetTag": "CLK-IT-2025-008",
+      "name": "Honeywell Orbit 7120 Omnidirectional Barcode Scanner",
+      "category": "POS Terminal",
+      "brand": "Honeywell",
+      "modelNumber": "MK7120-31A38",
+      "serialNumber": "HW-7120-449102",
+      "hasSim": false,
+      "imei1": "",
+      "imei2": "",
+      "condition": "Brand New",
+      "purchaseDate": "2025-05-10",
+      "warrantyEndDate": "2028-05-10",
+      "purchaseLocation": "Barcodes.lk (Colombo 06)",
+      "purchaseAmount": 48000,
+      "currency": "LKR",
+      "invoiceDoc": "",
+      "images": [
+        "https://images.unsplash.com/photo-1556742049-0a67e557224f?w=800&auto=format&fit=crop&q=80"
+      ],
+      "status": "ALLOCATED_PERMANENT",
+      "currentAssignment": {
+        "assignmentType": "LOCATION_SHOWROOM",
+        "assignedToName": "Kandy City Centre Showroom POS 2",
+        "assignedToRole": "Checkout Counter 2",
+        "assignedToContact": "081 220 4455 | kandy.store@cosmetics.lk",
+        "assignedDate": "2025-05-15",
+        "expectedReturnDate": "",
+        "locationOrBranch": "Kandy City Centre Branch",
+        "department": "Retail Showrooms & Operations",
+        "purpose": "Fast barcode scanning of cosmetics, skincare, and fragrance SKUs at checkout",
+        "notes": "USB interface connected to main POS system."
+      },
+      "createdAt": "2025-05-10T14:00:00.000Z",
+      "updatedAt": "2025-05-15T10:00:00.000Z"
+    }
+  ],
+  "custodyHistory": [
+    {
+      "id": "HIS-001",
+      "assetId": "AST-1001",
+      "action": "PURCHASED",
+      "date": "2025-03-10",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Vendor (Future World)",
+      "newHolder": "cosmetics.lk IT Central Inventory",
+      "assignmentType": "INVENTORY_INTAKE",
+      "duration": "",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Brand new device purchased for high-performance creative content production."
+    },
+    {
+      "id": "HIS-002",
+      "assetId": "AST-1001",
+      "action": "ASSIGNED",
+      "date": "2025-03-15",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "IT Central Inventory",
+      "newHolder": "Charith Perera (Lead Graphic Designer)",
+      "assignmentType": "PERMANENT_EMPLOYEE",
+      "duration": "",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Initial assignment for UI/UX branding and packaging design work."
+    },
+    {
+      "id": "HIS-003",
+      "assetId": "AST-1001",
+      "action": "RETURNED",
+      "date": "2025-08-30",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Charith Perera (Lead Graphic Designer)",
+      "newHolder": "IT Central Inventory",
+      "assignmentType": "RETURN_TO_IT",
+      "duration": "168 days (approx 5.5 months)",
+      "conditionUponReturn": "Used - Like New",
+      "damages": "None. Minor palmrest smudges, thoroughly sanitized.",
+      "notes": "Charith transitioned to an iMac studio desktop at HQ. Device returned in mint condition."
+    },
+    {
+      "id": "HIS-004",
+      "assetId": "AST-1001",
+      "action": "TRANSFERRED",
+      "date": "2025-09-01",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Charith Perera (via IT Inventory)",
+      "newHolder": "Senuri Wickramasinghe (Lead Video Producer)",
+      "assignmentType": "PERMANENT_EMPLOYEE",
+      "duration": "Current assignment (~400+ days)",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Reassigned to Senuri for 4K campaign video editing and color correction."
+    },
+    {
+      "id": "HIS-005",
+      "assetId": "AST-1002",
+      "action": "PURCHASED",
+      "date": "2025-06-15",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Vendor (CameraLK)",
+      "newHolder": "cosmetics.lk IT Inventory",
+      "assignmentType": "INVENTORY_INTAKE",
+      "duration": "",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Intake inspection passed. Shutter count 0."
+    },
+    {
+      "id": "HIS-006",
+      "assetId": "AST-1002",
+      "action": "ASSIGNED",
+      "date": "2026-10-10",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "IT Inventory",
+      "newHolder": "Kaveen Dias (Social Media Specialist)",
+      "assignmentType": "TEMPORARY_BORROW",
+      "duration": "Scheduled: 8 days (Due 2026-10-18)",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Temporary borrow for Glamour Glow showroom product shoot. Expected back on Oct 18."
+    },
+    {
+      "id": "HIS-007",
+      "assetId": "AST-1006",
+      "action": "PURCHASED",
+      "date": "2025-04-18",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Vendor (Abans)",
+      "newHolder": "IT Inventory",
+      "assignmentType": "INVENTORY_INTAKE",
+      "duration": "",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Intake brand new iPad 10th Gen."
+    },
+    {
+      "id": "HIS-008",
+      "assetId": "AST-1006",
+      "action": "ASSIGNED",
+      "date": "2025-05-01",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "IT Inventory",
+      "newHolder": "Kandy City Centre Branch (Supervisor: Nelum Rathnayake)",
+      "assignmentType": "LOCATION_SHOWROOM",
+      "duration": "",
+      "conditionUponReturn": "",
+      "damages": "",
+      "notes": "Deployed for cosmetics catalog viewing by walk-in customers."
+    },
+    {
+      "id": "HIS-009",
+      "assetId": "AST-1006",
+      "action": "RETURNED",
+      "date": "2026-10-01",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Kandy City Centre Branch",
+      "newHolder": "IT Lab & Inventory",
+      "assignmentType": "RETURN_TO_IT",
+      "duration": "518 days (~17 months)",
+      "conditionUponReturn": "Used - Good",
+      "damages": "Fine hairline scratch on bottom metal edge. Screen protector was worn and removed. Screen display is 100% fine.",
+      "notes": "Showroom replaced with new wall-mounted interactive kiosk. iPad wiped, tested, and returned to Available inventory."
+    },
+    {
+      "id": "HIS-010",
+      "assetId": "AST-1007",
+      "action": "DAMAGE_REPORTED",
+      "date": "2026-10-04",
+      "performedBy": "IT Asset Admin",
+      "previousHolder": "Sandun Jayasuriya (Logistics Supervisor)",
+      "newHolder": "IT Lab",
+      "assignmentType": "DAMAGE_INSPECTION",
+      "duration": "",
+      "conditionUponReturn": "Damaged",
+      "damages": "Tea spill over keyboard area. Spacebar, Enter key sticky and non-responsive. Trackpad cursor jumps intermittently.",
+      "notes": "Device powered off immediately. Sent to Softlogic Authorized Service Center under ticket #SRV-99812."
+    }
+  ]
+}
