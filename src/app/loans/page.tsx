@@ -11,12 +11,13 @@ import {
   Tag, 
   History, 
   AlertTriangle, 
-  CheckCircle2 
+  CheckCircle2,
+  FileCheck2
 } from 'lucide-react';
 import { formatDate, calculateDuration } from '@/lib/utils';
 
 function LoansContent() {
-  const { assets, openDetail, openReturn } = useApp();
+  const { assets, openDetail, openReturn, openHandoverVoucher } = useApp();
   const [currentDate, setCurrentDate] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -136,6 +137,15 @@ function LoansContent() {
 
                 {/* Action Footer */}
                 <div className="flex items-center gap-2 pt-1">
+                  <button
+                    onClick={() => openHandoverVoucher(asset)}
+                    title="Print Official Custody Voucher Slip"
+                    className="py-2.5 px-3 rounded-xl border border-[#c28551]/30 hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold flex items-center justify-center gap-1.5 transition btn-press-sm cursor-pointer"
+                  >
+                    <FileCheck2 className="w-3.5 h-3.5" />
+                    <span>Voucher Slip</span>
+                  </button>
+
                   <button
                     onClick={() => openDetail(asset)}
                     className="flex-1 py-2.5 rounded-xl border border-slate-200/90 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition btn-press-sm cursor-pointer"

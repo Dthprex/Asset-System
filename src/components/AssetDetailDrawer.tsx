@@ -14,7 +14,8 @@ import {
   Copy,
   Check,
   RotateCcw,
-  ArrowRightLeft
+  ArrowRightLeft,
+  FileCheck2
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Asset, CustodyRecord } from '@/types/asset';
@@ -26,6 +27,7 @@ interface AssetDetailDrawerProps {
   onClose: () => void;
   onAssign: (asset: Asset) => void;
   onReturn: (asset: Asset) => void;
+  onOpenVoucher?: (asset: Asset) => void;
 }
 
 export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
@@ -34,6 +36,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onClose,
   onAssign,
   onReturn,
+  onOpenVoucher,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -403,16 +406,28 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
             </button>
 
             {asset.currentAssignment ? (
-              <button
-                onClick={() => {
-                  onClose();
-                  onReturn(asset);
-                }}
-                className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer btn-press"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Return & Inspect Damage</span>
-              </button>
+              <div className="flex items-center gap-2">
+                {onOpenVoucher && (
+                  <button
+                    onClick={() => onOpenVoucher(asset)}
+                    className="px-3.5 py-2 rounded-xl border border-[#c28551]/30 hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer btn-press-sm"
+                  >
+                    <FileCheck2 className="w-3.5 h-3.5" />
+                    <span>Handover Voucher</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    onClose();
+                    onReturn(asset);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer btn-press"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Return & Inspect Damage</span>
+                </button>
+              </div>
             ) : (
               <button
                 onClick={() => {

@@ -9,7 +9,8 @@ import { AssignModal } from '@/components/AssignModal';
 import { ReturnChecklistModal } from '@/components/ReturnChecklistModal';
 import { BarcodeScannerModal } from '@/components/BarcodeScannerModal';
 import { StickerSheetModal } from '@/components/StickerSheetModal';
-import { Asset, Branch, Department } from '@/types/asset';
+import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
+import { Asset, Branch, Department, CurrentAssignment } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
 interface AppContextType {
@@ -26,6 +27,7 @@ interface AppContextType {
   openNewIntake: () => void;
   openScanner: () => void;
   openStickerSheet: (customAssets?: Asset[]) => void;
+  openHandoverVoucher: (asset: Asset, assignment?: CurrentAssignment) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -68,6 +70,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isStickerOpen, setIsStickerOpen] = useState(false);
   const [stickerAssets, setStickerAssets] = useState<Asset[]>([]);
+  const [isVoucherOpen, setIsVoucherOpen] = useState(false);
+  const [voucherAsset, setVoucherAsset] = useState<Asset | null>(null);
+  const [voucherAssignment, setVoucherAssignment] = useState<CurrentAssignment | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -135,6 +140,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsStickerOpen(true);
   };
 
+  const openHandoverVoucher = (asset: Asset, assignment?: CurrentAssignment) => {
+    setVoucherAsset(asset);
+    setVoucherAssignment(assignment || null);
+    setIsVoucherOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -155,6 +166,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const handleAssetAssigned = (updated: Asset) => {
     showToast(`Assigned ${updated.name} to ${updated.currentAssignment?.assignedToName}!`);
     loadData();
+    openHandoverVoucher(updated);
   };
 
   const handleAssetReturned = (updated: Asset) => {
@@ -178,6 +190,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openNewIntake,
         openScanner,
         openStickerSheet,
+        openHandoverVoucher,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -241,6 +254,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onClose={() => setIsDrawerOpen(false)}
           onAssign={openAssign}
           onReturn={openReturn}
+          onOpenVoucher={(asset) => openHandoverVoucher(asset)}
         />
 
         <NewAssetWizardModal
@@ -280,6 +294,13 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           isOpen={isStickerOpen}
           onClose={() => setIsStickerOpen(false)}
           assets={stickerAssets.length > 0 ? stickerAssets : assets}
+        />
+
+        <HandoverVoucherModal
+          isOpen={isVoucherOpen}
+          onClose={() => setIsVoucherOpen(false)}
+          asset={voucherAsset}
+          assignment={voucherAssignment}
         />
 
       </div>
