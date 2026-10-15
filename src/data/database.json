@@ -532,5 +532,101 @@
       "notes": "Handed over on 2026-10-05. Motherboard ultrasonic cleaning passed. Awaiting replacement original backlit keyboard assembly from Lenovo Singapore.",
       "dispatchedBy": "IT Asset Admin"
     }
+  ],
+  "maintenanceRecords": [
+    {
+      "id": "MNT-2026-001",
+      "assetId": "AST-1001",
+      "assetTag": "CLK-IT-2025-001",
+      "assetName": "MacBook Pro 14\" (Apple M2 Pro, 16GB, 512GB)",
+      "category": "Laptop",
+      "type": "BIANNUAL_ROUTINE",
+      "scheduledDate": "2026-10-25",
+      "status": "SCHEDULED",
+      "inspector": "Nuwan Bandara (Lead Systems Engineer)",
+      "checklist": {
+        "thermalAndCooling": false,
+        "batteryHealth": false,
+        "portsAndConnectivity": false,
+        "displayAndChassis": false,
+        "softwareAndSecurity": false,
+        "sanitization": false
+      },
+      "nextScheduledDate": "2027-04-25",
+      "notes": "Biannual 6-month cycle. Verify Apple Silicon thermals, MagSafe charging port debris, battery cycle count, and macOS Sequoia compliance.",
+      "createdAt": "2026-10-01T09:00:00.000Z"
+    },
+    {
+      "id": "MNT-2026-002",
+      "assetId": "AST-1002",
+      "assetTag": "CLK-IT-2025-002",
+      "assetName": "Sony Alpha 7 IV Full-Frame Camera + 24-70mm GM Lens",
+      "category": "Camera",
+      "type": "RANDOM_SPOT_CHECK",
+      "scheduledDate": "2026-10-12",
+      "completedDate": "2026-10-12",
+      "status": "COMPLETED",
+      "inspector": "Nuwan Bandara (Lead Systems Engineer)",
+      "checklist": {
+        "thermalAndCooling": true,
+        "batteryHealth": true,
+        "portsAndConnectivity": true,
+        "displayAndChassis": true,
+        "softwareAndSecurity": true,
+        "sanitization": true
+      },
+      "healthGrade": "EXCELLENT",
+      "batteryHealthPercent": 98,
+      "findings": "Random unannounced spot check performed prior to temporary Glamour Glow showroom checkout. CMOS full-frame sensor clean (0 dust specks at f/22), shutter actuation count 4,120 cycles. Firmware v3.01 up to date.",
+      "actionTaken": "Cleaned lens front element with Zeiss optical solution, inspected battery door gasket, sanitized hand grip.",
+      "costLKR": 0,
+      "nextScheduledDate": "2027-04-12",
+      "notes": "Spot check passed with Grade A condition.",
+      "createdAt": "2026-10-12T08:30:00.000Z"
+    },
+    {
+      "id": "MNT-2026-003",
+      "assetId": "AST-1005",
+      "assetTag": "CLK-IT-2025-005",
+      "assetName": "Dell OptiPlex 7090 Micro Desktop + Dell 24\" IPS Monitor",
+      "category": "Desktop",
+      "type": "BIANNUAL_ROUTINE",
+      "scheduledDate": "2026-08-18",
+      "status": "OVERDUE",
+      "inspector": "Chamara Fernando (IT Field Support)",
+      "checklist": {
+        "thermalAndCooling": false,
+        "batteryHealth": true,
+        "portsAndConnectivity": false,
+        "displayAndChassis": false,
+        "softwareAndSecurity": false,
+        "sanitization": false
+      },
+      "nextScheduledDate": "2027-02-18",
+      "notes": "Biannual 6-month checkup overdue at Nawala HQ Finance desk. Requires blower dust extraction, CPU thermal paste refresh, and Windows BitLocker key verification.",
+      "createdAt": "2026-08-01T10:00:00.000Z"
+    },
+    {
+      "id": "MNT-2026-004",
+      "assetId": "AST-1008",
+      "assetTag": "CLK-IT-2025-008",
+      "assetName": "Honeywell Orbit 7120 Omnidirectional Barcode Scanner",
+      "category": "POS Terminal",
+      "type": "RANDOM_SPOT_CHECK",
+      "scheduledDate": "2026-10-16",
+      "status": "SCHEDULED",
+      "inspector": "Kandy Branch Tech Support",
+      "checklist": {
+        "thermalAndCooling": false,
+        "batteryHealth": false,
+        "portsAndConnectivity": false,
+        "displayAndChassis": false,
+        "softwareAndSecurity": false,
+        "sanitization": false
+      },
+      "nextScheduledDate": "2027-04-16",
+      "notes": "Impromptu POS scanner sweep at KCC showroom. Test laser grating scan rate and USB interface cable shielding.",
+      "createdAt": "2026-10-14T11:00:00.000Z"
+    }
   ]
 }

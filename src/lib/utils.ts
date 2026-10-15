@@ -141,3 +141,18 @@ export function getWarrantyInfo(warrantyEndDate: string, referenceDate?: Date): 
     };
   }
 }
+
+/**
+ * Calculate next semi-annual routine date (+6 months)
+ */
+export function calculateNextBiannualDate(baseDateStr: string): string {
+  const date = new Date(baseDateStr);
+  if (isNaN(date.getTime())) {
+    const fallback = new Date();
+    fallback.setMonth(fallback.getMonth() + 6);
+    return fallback.toISOString().slice(0, 10);
+  }
+  date.setMonth(date.getMonth() + 6);
+  return date.toISOString().slice(0, 10);
+}
+

@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket } from '@/types/asset';
-import { calculateDuration } from './utils';
+import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket, MaintenanceRecord } from '@/types/asset';
+import { calculateDuration, calculateNextBiannualDate } from './utils';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
 
@@ -12,6 +12,9 @@ export async function readDatabase(): Promise<DatabaseSchema> {
     if (!data.repairTickets) {
       data.repairTickets = [];
     }
+    if (!data.maintenanceRecords) {
+      data.maintenanceRecords = [];
+    }
     return data;
   } catch (error) {
     console.error('Failed to read database file:', error);
@@ -21,6 +24,7 @@ export async function readDatabase(): Promise<DatabaseSchema> {
       assets: [],
       custodyHistory: [],
       repairTickets: [],
+      maintenanceRecords: [],
     };
   }
 }
@@ -381,5 +385,135 @@ export async function updateRepairTicket(
 
   await writeDatabase(db);
   return updatedTicket;
+}
+
+export async function getMaintenanceRecords(): Promise<MaintenanceRecord[]> {
+  const db = await readDatabase();
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Auto-flag overdue records
+  const updated = (db.maintenanceRecords || []).map((m) => {
+    if (m.status === 'SCHEDULED' && m.scheduledDate < today) {
+      return { ...m, status: 'OVERDUE' as const };
+    }
+    return m;
+  });
+
+  return updated.sort(
+    (a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime()
+  );
+}
+
+export async function getMaintenanceRecordsByAsset(assetId: string): Promise<MaintenanceRecord[]> {
+  const all = await getMaintenanceRecords();
+  return all.filter((m) => m.assetId === assetId);
+}
+
+export async function scheduleMaintenance(
+  data: Omit<MaintenanceRecord, 'id' | 'createdAt'>
+): Promise<MaintenanceRecord> {
+  const db = await readDatabase();
+  db.maintenanceRecords = db.maintenanceRecords || [];
+
+  const year = new Date().getFullYear();
+  const nextNum = String(db.maintenanceRecords.length + 1).padStart(3, '0');
+  const newId = `MNT-${year}-${nextNum}`;
+
+  const nextScheduledDate =
+    data.nextScheduledDate || calculateNextBiannualDate(data.scheduledDate);
+
+  const newRecord: MaintenanceRecord = {
+    ...data,
+    id: newId,
+    nextScheduledDate,
+    createdAt: new Date().toISOString(),
+  };
+
+  db.maintenanceRecords.unshift(newRecord);
+  await writeDatabase(db);
+  return newRecord;
+}
+
+export async function completeMaintenance(
+  id: string,
+  completion: Partial<MaintenanceRecord>
+): Promise<{ record: MaintenanceRecord; nextRoutineRecord?: MaintenanceRecord } | null> {
+  const db = await readDatabase();
+  db.maintenanceRecords = db.maintenanceRecords || [];
+
+  const index = db.maintenanceRecords.findIndex((m) => m.id === id);
+  if (index === -1) return null;
+
+  const current = db.maintenanceRecords[index];
+  const completedDate = completion.completedDate || new Date().toISOString().slice(0, 10);
+  const nextScheduledDate = calculateNextBiannualDate(completedDate);
+
+  const updatedRecord: MaintenanceRecord = {
+    ...current,
+    ...completion,
+    id: current.id,
+    completedDate,
+    status: 'COMPLETED',
+    nextScheduledDate,
+  };
+
+  db.maintenanceRecords[index] = updatedRecord;
+
+  // Add maintenance inspection record to custody history
+  const historyRecord: CustodyRecord = {
+    id: `HIS-${Date.now().toString().slice(-6)}`,
+    assetId: updatedRecord.assetId,
+    action: 'RETURNED',
+    date: completedDate,
+    performedBy: updatedRecord.inspector,
+    previousHolder: 'Maintenance Inspection Desk',
+    newHolder: 'Active Fleet',
+    assignmentType: 'INVENTORY_INTAKE',
+    notes: `${updatedRecord.type === 'BIANNUAL_ROUTINE' ? 'Biannual 6-Month Routine' : 'Spot Check'} Inspection passed. Health Grade: ${updatedRecord.healthGrade || 'GOOD'}. Battery: ${updatedRecord.batteryHealthPercent ? `${updatedRecord.batteryHealthPercent}%` : 'N/A'}. ${updatedRecord.findings || ''}`,
+  };
+  db.custodyHistory.unshift(historyRecord);
+
+  // If Critical Risk detected, mark asset as UNDER_REPAIR
+  if (updatedRecord.healthGrade === 'CRITICAL_RISK') {
+    const assetIndex = db.assets.findIndex((a) => a.id === updatedRecord.assetId);
+    if (assetIndex !== -1) {
+      db.assets[assetIndex].status = 'UNDER_REPAIR';
+      db.assets[assetIndex].condition = 'Damaged / Needs Repair';
+      db.assets[assetIndex].updatedAt = new Date().toISOString();
+    }
+  }
+
+  // Automatically schedule next 6-month Biannual routine if routine inspection
+  let nextRoutineRecord: MaintenanceRecord | undefined;
+  if (updatedRecord.type === 'BIANNUAL_ROUTINE') {
+    const year = new Date().getFullYear();
+    const nextNum = String(db.maintenanceRecords.length + 1).padStart(3, '0');
+    nextRoutineRecord = {
+      id: `MNT-${year}-${nextNum}`,
+      assetId: updatedRecord.assetId,
+      assetTag: updatedRecord.assetTag,
+      assetName: updatedRecord.assetName,
+      category: updatedRecord.category,
+      type: 'BIANNUAL_ROUTINE',
+      scheduledDate: nextScheduledDate,
+      status: 'SCHEDULED',
+      inspector: updatedRecord.inspector,
+      checklist: {
+        thermalAndCooling: false,
+        batteryHealth: false,
+        portsAndConnectivity: false,
+        displayAndChassis: false,
+        softwareAndSecurity: false,
+        sanitization: false,
+      },
+      nextScheduledDate: calculateNextBiannualDate(nextScheduledDate),
+      notes: `Automated 6-month biannual cycle following ${updatedRecord.id}.`,
+      createdAt: new Date().toISOString(),
+    };
+    db.maintenanceRecords.unshift(nextRoutineRecord);
+  }
+
+  await writeDatabase(db);
+  return { record: updatedRecord, nextRoutineRecord };
 }
 

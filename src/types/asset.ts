@@ -138,10 +138,60 @@ export interface RepairTicket {
   dispatchedBy: string;
 }
 
+export type MaintenanceType =
+  | 'BIANNUAL_ROUTINE'
+  | 'RANDOM_SPOT_CHECK'
+  | 'PRE_DEPLOYMENT'
+  | 'POST_REPAIR_AUDIT';
+
+export type MaintenanceStatus =
+  | 'SCHEDULED'
+  | 'OVERDUE'
+  | 'COMPLETED'
+  | 'CANCELLED';
+
+export type MaintenanceHealthGrade =
+  | 'EXCELLENT'
+  | 'GOOD'
+  | 'NEEDS_ATTENTION'
+  | 'CRITICAL_RISK';
+
+export interface MaintenanceChecklist {
+  thermalAndCooling: boolean;
+  batteryHealth: boolean;
+  portsAndConnectivity: boolean;
+  displayAndChassis: boolean;
+  softwareAndSecurity: boolean;
+  sanitization: boolean;
+}
+
+export interface MaintenanceRecord {
+  id: string;
+  assetId: string;
+  assetTag: string;
+  assetName: string;
+  category: AssetCategory;
+  type: MaintenanceType;
+  scheduledDate: string;
+  completedDate?: string;
+  status: MaintenanceStatus;
+  inspector: string;
+  checklist: MaintenanceChecklist;
+  healthGrade?: MaintenanceHealthGrade;
+  batteryHealthPercent?: number;
+  findings?: string;
+  actionTaken?: string;
+  costLKR?: number;
+  nextScheduledDate: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface DatabaseSchema {
   branches: Branch[];
   departments: Department[];
   assets: Asset[];
   custodyHistory: CustodyRecord[];
   repairTickets?: RepairTicket[];
+  maintenanceRecords?: MaintenanceRecord[];
 }

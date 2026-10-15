@@ -16,10 +16,13 @@ import {
   RotateCcw,
   ArrowRightLeft,
   FileCheck2,
-  Wrench
+  Wrench,
+  CalendarCheck,
+  Zap,
+  BatteryCharging
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Asset, CustodyRecord } from '@/types/asset';
+import { Asset, CustodyRecord, MaintenanceRecord } from '@/types/asset';
 import { formatLKR, formatDate, getWarrantyInfo, calculateDuration } from '@/lib/utils';
 
 interface AssetDetailDrawerProps {
@@ -42,13 +45,15 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onDispatchRepair,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
+  const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState<'timeline' | 'specs' | 'qr'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'specs' | 'qr' | 'maintenance'>('timeline');
   const [copiedTag, setCopiedTag] = useState(false);
 
   useEffect(() => {
     if (asset && isOpen) {
       fetchHistory(asset.id);
+      fetchMaintenance(asset.id);
     }
   }, [asset, isOpen]);
 
@@ -64,6 +69,18 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
       console.error('Failed to load history:', err);
     } finally {
       setLoadingHistory(false);
+    }
+  };
+
+  const fetchMaintenance = async (assetId: string) => {
+    try {
+      const res = await fetch(`/api/maintenance?assetId=${assetId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setMaintenanceList(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load maintenance records:', err);
     }
   };
 
@@ -171,6 +188,18 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
             >
               <QrIcon className="w-4 h-4" />
               <span>QR Hardware Label</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('maintenance')}
+              className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
+                activeTab === 'maintenance'
+                  ? 'border-[#c28551] text-[#c28551] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-[#1d2939]'
+              }`}
+            >
+              <CalendarCheck className="w-4 h-4" />
+              <span>Health & 6-Mo Checks ({maintenanceList.length})</span>
             </button>
           </div>
 
@@ -394,6 +423,76 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                   <Printer className="w-4 h-4 text-[#dfae85]" />
                   <span>Print Physical QR Sticker</span>
                 </button>
+              </div>
+            )}
+
+            {/* TAB 4: MAINTENANCE & HEALTH */}
+            {activeTab === 'maintenance' && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-[#fbf5ef] border border-[#f0e6de] flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs">Biannual 6-Month Protocol</div>
+                    <p className="text-[11px] text-slate-500">Semi-annual preventative overhaul & impromptu spot checks</p>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white text-[#c28551] border border-[#ead7c7]">
+                    2× Yearly
+                  </span>
+                </div>
+
+                {maintenanceList.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400 text-xs space-y-2">
+                    <CalendarCheck className="w-8 h-8 mx-auto text-slate-300" />
+                    <div>No maintenance logs recorded yet for this asset.</div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {maintenanceList.map((m) => {
+                      const isRoutine = m.type === 'BIANNUAL_ROUTINE';
+                      const isCompleted = m.status === 'COMPLETED';
+
+                      return (
+                        <div
+                          key={m.id}
+                          className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] space-y-2 text-xs"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                              {isRoutine ? (
+                                <CalendarCheck className="w-3.5 h-3.5 text-[#c28551]" />
+                              ) : (
+                                <Zap className="w-3.5 h-3.5 text-amber-600" />
+                              )}
+                              <span>{isRoutine ? 'Biannual Routine' : 'Spot Check'}</span>
+                            </span>
+
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                isCompleted
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : m.status === 'OVERDUE'
+                                  ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                                  : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+                              }`}
+                            >
+                              {m.status}
+                            </span>
+                          </div>
+
+                          {m.findings && (
+                            <p className="text-[11px] text-slate-600 bg-white p-2.5 rounded-xl border border-slate-100">
+                              {m.findings}
+                            </p>
+                          )}
+
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+                            <span>Inspector: {m.inspector.split(' ')[0]}</span>
+                            <span>Date: <span className="font-mono text-slate-600 font-semibold">{formatDate(m.completedDate || m.scheduledDate)}</span></span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

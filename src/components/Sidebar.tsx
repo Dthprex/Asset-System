@@ -11,7 +11,8 @@ import {
   ShieldCheck, 
   ChevronLeft, 
   ChevronRight,
-  Sparkles
+  Sparkles,
+  CalendarCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -66,6 +67,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: expiringWarrantyCount > 0 ? String(expiringWarrantyCount) : undefined,
       badgeColor: 'bg-[#faece2] text-[#c28551] border-[#ead7c7]',
       active: pathname === '/warranty',
+    },
+    {
+      label: 'Maintenance & Checks',
+      href: '/maintenance',
+      icon: CalendarCheck,
+      active: pathname === '/maintenance',
     },
   ];
 
