@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { 
-  X, 
-  Printer, 
-  FileCheck2, 
-  Building2, 
-  Calendar, 
-  User, 
-  ShieldCheck, 
-  Smartphone, 
-  Clock, 
-  CheckSquare, 
+import {
+  X,
+  Printer,
+  FileCheck2,
+  Building2,
+  Calendar,
+  User,
+  ShieldCheck,
+  Smartphone,
+  Clock,
+  CheckSquare,
   Download
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -47,7 +47,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
     <>
       {/* SCREEN PREVIEW MODAL (Hidden in print) */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 print:hidden">
-        <div 
+        <div
           className="relative w-full max-w-3xl bg-white border border-[#f0e6de] rounded-3xl shadow-2xl overflow-hidden my-auto flex flex-col max-h-[92vh]"
           onClick={(e) => e.stopPropagation()}
         >
@@ -80,10 +80,10 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
 
           {/* Modal Body: Scrollable Voucher Document Preview */}
           <div className="flex-1 bg-slate-100/90 p-4 sm:p-6 overflow-y-auto flex justify-center">
-            
+
             {/* The Document Sheet */}
             <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-8 space-y-6 text-slate-800">
-              
+
               {/* Slip Header */}
               <div className="flex items-start justify-between pb-4 border-b-2 border-slate-900">
                 <div>
@@ -125,7 +125,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
 
               {/* Custodian Details & Device Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                
+
                 {/* Custodian Box */}
                 <div className="p-4 rounded-xl border border-slate-200 bg-white space-y-2">
                   <div className="font-bold text-slate-900 flex items-center gap-1.5 pb-2 border-b border-slate-100">
@@ -238,7 +238,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
 
               {/* Signature Blocks */}
               <div className="pt-6 border-t-2 border-slate-300 grid grid-cols-2 gap-8 text-xs">
-                
+
                 {/* Issued By */}
                 <div className="space-y-3">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
@@ -301,7 +301,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
       {/* DEDICATED PRINT CONTAINER (Visible ONLY when window.print() is called) */}
       <div className="hidden print:block print-area">
         <div style={{ padding: '24px', fontFamily: 'system-ui, -apple-system, sans-serif', color: '#111', background: 'white' }}>
-          
+
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2.5px solid #000', paddingBottom: '12px', marginBottom: '16px' }}>
             <div>
@@ -354,7 +354,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
 
           {/* Custodian & Hardware Tables */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            
+
             {/* Custodian Box */}
             <div style={{ border: '1px solid #222', borderRadius: '6px', padding: '12px', fontSize: '11px' }}>
               <div style={{ fontWeight: 'bold', borderBottom: '1px solid #ddd', paddingBottom: '4px', marginBottom: '8px', textTransform: 'uppercase', fontSize: '10px' }}>

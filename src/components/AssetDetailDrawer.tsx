@@ -15,7 +15,8 @@ import {
   Check,
   RotateCcw,
   ArrowRightLeft,
-  FileCheck2
+  FileCheck2,
+  Wrench
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Asset, CustodyRecord } from '@/types/asset';
@@ -28,6 +29,7 @@ interface AssetDetailDrawerProps {
   onAssign: (asset: Asset) => void;
   onReturn: (asset: Asset) => void;
   onOpenVoucher?: (asset: Asset) => void;
+  onDispatchRepair?: (asset: Asset) => void;
 }
 
 export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
@@ -37,6 +39,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onAssign,
   onReturn,
   onOpenVoucher,
+  onDispatchRepair,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -397,49 +400,71 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 bg-[#fdfbf9]/90 backdrop-blur-md border-t border-[#f0e6de] flex items-center justify-end gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-white text-xs font-semibold transition cursor-pointer btn-press-sm"
-            >
-              Close
-            </button>
-
-            {asset.currentAssignment ? (
-              <div className="flex items-center gap-2">
-                {onOpenVoucher && (
-                  <button
-                    onClick={() => onOpenVoucher(asset)}
-                    className="px-3.5 py-2 rounded-xl border border-[#c28551]/30 hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer btn-press-sm"
-                  >
-                    <FileCheck2 className="w-3.5 h-3.5" />
-                    <span>Handover Voucher</span>
-                  </button>
-                )}
-
+          <div className="p-4 bg-[#fdfbf9]/90 backdrop-blur-md border-t border-[#f0e6de] flex items-center justify-between gap-3">
+            <div>
+              {onDispatchRepair && (
                 <button
                   onClick={() => {
                     onClose();
-                    onReturn(asset);
+                    onDispatchRepair(asset);
                   }}
-                  className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer btn-press"
+                  className={`px-3 py-2 rounded-xl border text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer btn-press-sm ${
+                    isRepair
+                      ? 'border-[#c28551]/30 bg-[#fbf5ef] hover:bg-[#faece2] text-[#c28551]'
+                      : 'border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700'
+                  }`}
+                  title="Dispatch to authorized service center"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Return & Inspect Damage</span>
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>{isRepair ? 'Service Info / RMA' : 'Vendor Repair'}</span>
                 </button>
-              </div>
-            ) : (
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => {
-                  onClose();
-                  onAssign(asset);
-                }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-1.5 cursor-pointer btn-press"
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-white text-xs font-semibold transition cursor-pointer btn-press-sm"
               >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                <span>Deploy / Loan Item</span>
+                Close
               </button>
-            )}
+
+              {asset.currentAssignment ? (
+                <div className="flex items-center gap-2">
+                  {onOpenVoucher && (
+                    <button
+                      onClick={() => onOpenVoucher(asset)}
+                      className="px-3.5 py-2 rounded-xl border border-[#c28551]/30 hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer btn-press-sm"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      <span>Handover Voucher</span>
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      onClose();
+                      onReturn(asset);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer btn-press"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Return & Inspect Damage</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onAssign(asset);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-1.5 cursor-pointer btn-press"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <span>Deploy / Loan Item</span>
+                </button>
+              )}
+            </div>
           </div>
 
         </div>

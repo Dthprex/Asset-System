@@ -10,7 +10,8 @@ import { ReturnChecklistModal } from '@/components/ReturnChecklistModal';
 import { BarcodeScannerModal } from '@/components/BarcodeScannerModal';
 import { StickerSheetModal } from '@/components/StickerSheetModal';
 import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
-import { Asset, Branch, Department, CurrentAssignment } from '@/types/asset';
+import { NewRepairTicketModal } from '@/components/NewRepairTicketModal';
+import { Asset, Branch, Department, CurrentAssignment, RepairTicket } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
 interface AppContextType {
@@ -28,6 +29,7 @@ interface AppContextType {
   openScanner: () => void;
   openStickerSheet: (customAssets?: Asset[]) => void;
   openHandoverVoucher: (asset: Asset, assignment?: CurrentAssignment) => void;
+  openNewRepair: (asset?: Asset) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -73,6 +75,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isVoucherOpen, setIsVoucherOpen] = useState(false);
   const [voucherAsset, setVoucherAsset] = useState<Asset | null>(null);
   const [voucherAssignment, setVoucherAssignment] = useState<CurrentAssignment | null>(null);
+  const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
+  const [repairAsset, setRepairAsset] = useState<Asset | null>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -146,6 +150,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsVoucherOpen(true);
   };
 
+  const openNewRepair = (asset?: Asset) => {
+    setRepairAsset(asset || null);
+    setIsRepairModalOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -191,6 +200,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openScanner,
         openStickerSheet,
         openHandoverVoucher,
+        openNewRepair,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -255,6 +265,21 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onAssign={openAssign}
           onReturn={openReturn}
           onOpenVoucher={(asset) => openHandoverVoucher(asset)}
+          onDispatchRepair={(asset) => openNewRepair(asset)}
+        />
+
+        <NewRepairTicketModal
+          isOpen={isRepairModalOpen}
+          onClose={() => {
+            setIsRepairModalOpen(false);
+            setRepairAsset(null);
+          }}
+          onSuccess={(ticket) => {
+            showToast(`RMA #${ticket.rmaNumber} dispatched for ${ticket.assetName}!`);
+            loadData();
+          }}
+          preselectedAsset={repairAsset}
+          assets={assets}
         />
 
         <NewAssetWizardModal

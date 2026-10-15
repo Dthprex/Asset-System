@@ -511,5 +511,26 @@
       "damages": "Tea spill over keyboard area. Spacebar, Enter key sticky and non-responsive. Trackpad cursor jumps intermittently.",
       "notes": "Device powered off immediately. Sent to Softlogic Authorized Service Center under ticket #SRV-99812."
     }
+  ],
+  "repairTickets": [
+    {
+      "id": "RMA-2026-001",
+      "assetId": "AST-1007",
+      "assetTag": "CLK-IT-2025-007",
+      "assetName": "Lenovo ThinkPad E14 Gen 4 (Core i5 12th Gen, 16GB, 512GB)",
+      "vendorName": "Softlogic Information Technologies",
+      "vendorContact": "011 555 7800 (Technician: Ruwan)",
+      "serviceCenterLocation": "Softlogic Tech Centre, Nawam Mawatha, Colombo 02",
+      "rmaNumber": "SRV-99812",
+      "issueDescription": "Liquid spill over keyboard area. Spacebar, Enter key sticky and non-responsive. Trackpad cursor jumps intermittently.",
+      "estimatedCostLKR": 38500,
+      "actualCostLKR": 0,
+      "isCoveredByWarranty": true,
+      "dispatchedDate": "2026-10-05",
+      "expectedReturnDate": "2026-10-22",
+      "status": "AWAITING_PARTS",
+      "notes": "Handed over on 2026-10-05. Motherboard ultrasonic cleaning passed. Awaiting replacement original backlit keyboard assembly from Lenovo Singapore.",
+      "dispatchedBy": "IT Asset Admin"
+    }
   ]
 }

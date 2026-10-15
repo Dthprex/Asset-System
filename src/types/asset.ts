@@ -32,7 +32,8 @@ export type AssignmentType =
   | 'TEMPORARY_BORROW'
   | 'INVENTORY_INTAKE'
   | 'RETURN_TO_IT'
-  | 'DAMAGE_INSPECTION';
+  | 'DAMAGE_INSPECTION'
+  | 'VENDOR_REPAIR';
 
 export type HistoryAction =
   | 'PURCHASED'
@@ -109,9 +110,38 @@ export interface Department {
   name: string;
 }
 
+export type RepairTicketStatus =
+  | 'DISPATCHED_TO_VENDOR'
+  | 'UNDER_DIAGNOSTICS'
+  | 'AWAITING_PARTS'
+  | 'REPAIR_COMPLETED'
+  | 'RETURNED_TO_FLEET';
+
+export interface RepairTicket {
+  id: string;
+  assetId: string;
+  assetTag: string;
+  assetName: string;
+  vendorName: string;
+  vendorContact: string;
+  serviceCenterLocation: string;
+  rmaNumber: string;
+  issueDescription: string;
+  estimatedCostLKR: number;
+  actualCostLKR?: number;
+  isCoveredByWarranty: boolean;
+  dispatchedDate: string;
+  expectedReturnDate: string;
+  completedDate?: string;
+  status: RepairTicketStatus;
+  notes?: string;
+  dispatchedBy: string;
+}
+
 export interface DatabaseSchema {
   branches: Branch[];
   departments: Department[];
   assets: Asset[];
   custodyHistory: CustodyRecord[];
+  repairTickets?: RepairTicket[];
 }

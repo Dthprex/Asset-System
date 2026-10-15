@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department } from '@/types/asset';
+import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket } from '@/types/asset';
 import { calculateDuration } from './utils';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
@@ -8,7 +8,11 @@ const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
 export async function readDatabase(): Promise<DatabaseSchema> {
   try {
     const raw = await fs.readFile(DATA_FILE_PATH, 'utf-8');
-    return JSON.parse(raw) as DatabaseSchema;
+    const data = JSON.parse(raw) as DatabaseSchema;
+    if (!data.repairTickets) {
+      data.repairTickets = [];
+    }
+    return data;
   } catch (error) {
     console.error('Failed to read database file:', error);
     return {
@@ -16,6 +20,7 @@ export async function readDatabase(): Promise<DatabaseSchema> {
       departments: [],
       assets: [],
       custodyHistory: [],
+      repairTickets: [],
     };
   }
 }
@@ -259,3 +264,122 @@ export async function getSystemStats() {
     recentHistory: db.custodyHistory.slice(0, 8),
   };
 }
+
+export async function getRepairTickets(): Promise<RepairTicket[]> {
+  const db = await readDatabase();
+  return (db.repairTickets || []).sort(
+    (a, b) => new Date(b.dispatchedDate).getTime() - new Date(a.dispatchedDate).getTime()
+  );
+}
+
+export async function getRepairTicketsByAsset(assetId: string): Promise<RepairTicket[]> {
+  const db = await readDatabase();
+  return (db.repairTickets || [])
+    .filter((t) => t.assetId === assetId)
+    .sort((a, b) => new Date(b.dispatchedDate).getTime() - new Date(a.dispatchedDate).getTime());
+}
+
+export async function createRepairTicket(
+  ticketData: Omit<RepairTicket, 'id'>
+): Promise<RepairTicket> {
+  const db = await readDatabase();
+  db.repairTickets = db.repairTickets || [];
+
+  const year = new Date().getFullYear();
+  const nextNum = String(db.repairTickets.length + 1).padStart(3, '0');
+  const newId = `RMA-${year}-${nextNum}`;
+
+  const newTicket: RepairTicket = {
+    ...ticketData,
+    id: newId,
+  };
+
+  db.repairTickets.unshift(newTicket);
+
+  // Update target asset status to UNDER_REPAIR
+  const assetIndex = db.assets.findIndex((a) => a.id === ticketData.assetId);
+  if (assetIndex !== -1) {
+    const asset = db.assets[assetIndex];
+    asset.status = 'UNDER_REPAIR';
+    asset.condition = 'Damaged / Needs Repair';
+    asset.currentAssignment = {
+      assignmentType: 'VENDOR_REPAIR',
+      assignedToName: `Vendor: ${ticketData.vendorName}`,
+      assignedToRole: `RMA #${ticketData.rmaNumber}`,
+      assignedToContact: ticketData.vendorContact,
+      assignedDate: ticketData.dispatchedDate,
+      expectedReturnDate: ticketData.expectedReturnDate,
+      locationOrBranch: ticketData.serviceCenterLocation || 'Vendor Service Center',
+      department: 'IT & Systems Infrastructure',
+      purpose: `Dispatched for service: ${ticketData.issueDescription}`,
+      notes: ticketData.notes || '',
+    };
+    asset.updatedAt = new Date().toISOString();
+
+    // Add custody history entry
+    const historyRecord: CustodyRecord = {
+      id: `HIS-${Date.now().toString().slice(-6)}`,
+      assetId: ticketData.assetId,
+      action: 'REPAIR_SENT',
+      date: ticketData.dispatchedDate,
+      performedBy: ticketData.dispatchedBy || 'IT Asset Admin',
+      previousHolder: 'cosmetics.lk IT Central Inventory',
+      newHolder: `${ticketData.vendorName} (RMA #${ticketData.rmaNumber})`,
+      assignmentType: 'VENDOR_REPAIR',
+      notes: `Dispatched to ${ticketData.vendorName} (${ticketData.serviceCenterLocation}). Issue: ${ticketData.issueDescription}. Est. Cost: Rs. ${ticketData.estimatedCostLKR?.toLocaleString()} LKR.`,
+    };
+    db.custodyHistory.unshift(historyRecord);
+  }
+
+  await writeDatabase(db);
+  return newTicket;
+}
+
+export async function updateRepairTicket(
+  id: string,
+  updates: Partial<RepairTicket>
+): Promise<RepairTicket | null> {
+  const db = await readDatabase();
+  db.repairTickets = db.repairTickets || [];
+
+  const index = db.repairTickets.findIndex((t) => t.id === id);
+  if (index === -1) return null;
+
+  const current = db.repairTickets[index];
+  const updatedTicket: RepairTicket = {
+    ...current,
+    ...updates,
+    id: current.id, // prevent ID override
+  };
+
+  db.repairTickets[index] = updatedTicket;
+
+  // If status is transitioning to RETURNED_TO_FLEET, restore asset to AVAILABLE
+  if (updates.status === 'RETURNED_TO_FLEET') {
+    const assetIndex = db.assets.findIndex((a) => a.id === updatedTicket.assetId);
+    if (assetIndex !== -1) {
+      const asset = db.assets[assetIndex];
+      asset.status = 'AVAILABLE';
+      asset.condition = 'Used - Good';
+      asset.currentAssignment = null;
+      asset.updatedAt = new Date().toISOString();
+
+      const returnHistory: CustodyRecord = {
+        id: `HIS-${Date.now().toString().slice(-6)}`,
+        assetId: updatedTicket.assetId,
+        action: 'REPAIR_COMPLETED',
+        date: updates.completedDate || new Date().toISOString().slice(0, 10),
+        performedBy: 'IT Asset Admin',
+        previousHolder: `${updatedTicket.vendorName} (RMA #${updatedTicket.rmaNumber})`,
+        newHolder: 'cosmetics.lk IT Central Inventory',
+        assignmentType: 'RETURN_TO_IT',
+        notes: `Vendor repair completed and hardware reintegrated into central inventory. Actual cost: Rs. ${(updates.actualCostLKR ?? updatedTicket.actualCostLKR ?? 0).toLocaleString()} LKR. Notes: ${updates.notes || updatedTicket.notes || 'Repaired and tested.'}`,
+      };
+      db.custodyHistory.unshift(returnHistory);
+    }
+  }
+
+  await writeDatabase(db);
+  return updatedTicket;
+}
+
