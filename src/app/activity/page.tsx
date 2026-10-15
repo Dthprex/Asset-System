@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, Suspense } from 'react';
 import { AppShell, useApp } from '@/components/AppShell';
 import {
   Activity,
@@ -118,7 +118,7 @@ function ActivityContent() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date>(new Date());
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [newActionIds, setNewActionIds] = useState<Set<string>>(new Set());
 
   // Filter states
@@ -128,6 +128,10 @@ function ActivityContent() {
 
   // Lightbox state for return photos
   const [lightboxImage, setLightboxImage] = useState<{ url: string; title: string; subtitle?: string } | null>(null);
+
+  useEffect(() => {
+    setLastSyncedAt(new Date());
+  }, []);
 
   const fetchActivities = useCallback(async (isBackgroundSync = false) => {
     if (!isBackgroundSync) setLoading(true);
@@ -631,7 +635,9 @@ function ActivityContent() {
 export default function ActivityPage() {
   return (
     <AppShell>
-      <ActivityContent />
+      <Suspense fallback={<div className="p-16 text-center text-xs text-slate-400">Loading fleet activity stream...</div>}>
+        <ActivityContent />
+      </Suspense>
     </AppShell>
   );
 }

@@ -3,7 +3,7 @@ import { getMaintenanceRecords, scheduleMaintenance } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
     const type = searchParams.get('type');
     const assetId = searchParams.get('assetId');
@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, count: records.length, data: records });
   } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_')) throw error;
     console.error('Error fetching maintenance records:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch maintenance records' },

@@ -3,7 +3,7 @@ import { getRepairTickets, createRepairTicket } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const assetId = searchParams.get('assetId');
     const status = searchParams.get('status');
 
@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, count: tickets.length, data: tickets });
   } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_')) throw error;
     console.error('Error fetching repair tickets:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch repair tickets' },

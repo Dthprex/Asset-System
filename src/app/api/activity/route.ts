@@ -3,7 +3,7 @@ import { getEnrichedActivityHistory } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const action = searchParams.get('action') || undefined;
     const branch = searchParams.get('branch') || undefined;
     const search = searchParams.get('search') || undefined;
@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
       data: result.activities,
     });
   } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_')) throw error;
     console.error('Error fetching activity history:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch activity history' },

@@ -4,7 +4,7 @@ import { Asset } from '@/types/asset';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search')?.toLowerCase();
     const category = searchParams.get('category');
     const status = searchParams.get('status');
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ success: true, count: assets.length, data: assets });
   } catch (error: any) {
+    if (error?.digest?.startsWith('NEXT_')) throw error;
     console.error('Error fetching assets:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to fetch assets' },
