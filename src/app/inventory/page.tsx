@@ -11,14 +11,15 @@ import {
   History, 
   ArrowRightLeft, 
   RotateCcw, 
-  Clock
+  Clock,
+  Scan
 } from 'lucide-react';
 import { Asset } from '@/types/asset';
 import { formatLKR, formatDate, getWarrantyInfo } from '@/lib/utils';
 import { CATEGORIES, STATUSES } from '@/components/AssetFilters';
 
 function InventoryContent() {
-  const { assets, branches, openDetail, openAssign, openReturn, searchQuery, setSearchQuery } = useApp();
+  const { assets, branches, openDetail, openAssign, openReturn, openScanner, searchQuery, setSearchQuery } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
@@ -79,8 +80,16 @@ function InventoryContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 rounded-xl bg-[#faece2] text-[#c28551] border border-[#ead7c7] text-xs font-semibold">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={openScanner}
+            className="px-3.5 py-1.5 rounded-xl border border-[#c28551]/30 bg-white hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold flex items-center gap-2 shadow-2xs transition btn-press-sm cursor-pointer"
+          >
+            <Scan className="w-3.5 h-3.5 text-[#c28551]" />
+            <span>Scan Hardware Tag</span>
+          </button>
+
+          <span className="px-3 py-1.5 rounded-xl bg-[#faece2] text-[#c28551] border border-[#ead7c7] text-xs font-semibold">
             {filteredAssets.length} of {assets.length} Items Listed
           </span>
         </div>

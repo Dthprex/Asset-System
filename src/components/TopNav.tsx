@@ -4,11 +4,13 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Plus, 
-  RefreshCw 
+  RefreshCw,
+  Scan
 } from 'lucide-react';
 
 interface TopNavProps {
   onOpenNewAssetModal: () => void;
+  onOpenScanner?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   searchQuery?: string;
@@ -18,6 +20,7 @@ interface TopNavProps {
 
 export const TopNav: React.FC<TopNavProps> = ({
   onOpenNewAssetModal,
+  onOpenScanner,
   onRefresh,
   isRefreshing = false,
   searchQuery = '',
@@ -87,6 +90,21 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#faf7f3] transition disabled:opacity-50 cursor-pointer btn-press-sm"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#c28551]' : ''}`} />
+          </button>
+        )}
+
+        {/* Hardware Barcode & QR Scanner Trigger */}
+        {onOpenScanner && (
+          <button
+            onClick={onOpenScanner}
+            title="Scan Hardware Tag (⌘B)"
+            className="px-3.5 py-2.5 rounded-xl border border-[#c28551]/30 bg-white hover:bg-[#fbf5ef] text-slate-700 hover:text-[#c28551] text-xs font-semibold shadow-2xs transition flex items-center gap-2 cursor-pointer btn-press-sm"
+          >
+            <Scan className="w-4 h-4 text-[#c28551]" />
+            <span className="hidden sm:inline">Scan Tag</span>
+            <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium text-slate-400 bg-slate-100 border border-slate-200">
+              ⌘B
+            </kbd>
           </button>
         )}
 

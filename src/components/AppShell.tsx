@@ -7,6 +7,7 @@ import { AssetDetailDrawer } from '@/components/AssetDetailDrawer';
 import { NewAssetWizardModal } from '@/components/NewAssetWizardModal';
 import { AssignModal } from '@/components/AssignModal';
 import { ReturnChecklistModal } from '@/components/ReturnChecklistModal';
+import { BarcodeScannerModal } from '@/components/BarcodeScannerModal';
 import { Asset, Branch, Department } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -22,6 +23,7 @@ interface AppContextType {
   openAssign: (asset: Asset) => void;
   openReturn: (asset: Asset) => void;
   openNewIntake: () => void;
+  openScanner: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -61,6 +63,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isNewWizardOpen, setIsNewWizardOpen] = useState(false);
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -119,6 +122,22 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsNewWizardOpen(true);
   };
 
+  const openScanner = () => {
+    setIsScannerOpen(true);
+  };
+
+  // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setIsScannerOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleAssetCreated = (newAsset: Asset) => {
     showToast(`Registered ${newAsset.name} (${newAsset.assetTag}) into inventory!`);
     loadData();
@@ -148,6 +167,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openAssign,
         openReturn,
         openNewIntake,
+        openScanner,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -170,6 +190,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           {/* Top Sticky Header */}
           <TopNav
             onOpenNewAssetModal={openNewIntake}
+            onOpenScanner={openScanner}
             onRefresh={loadData}
             isRefreshing={refreshing}
             searchQuery={searchQuery}
@@ -234,6 +255,15 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           isOpen={isReturnOpen}
           onClose={() => setIsReturnOpen(false)}
           onSuccess={handleAssetReturned}
+        />
+
+        <BarcodeScannerModal
+          isOpen={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          assets={assets}
+          onSelectAsset={(asset) => openDetail(asset)}
+          onOpenAssign={(asset) => openAssign(asset)}
+          onOpenReturn={(asset) => openReturn(asset)}
         />
 
       </div>
