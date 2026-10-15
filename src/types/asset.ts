@@ -197,3 +197,14 @@ export interface DatabaseSchema {
   repairTickets?: RepairTicket[];
   maintenanceRecords?: MaintenanceRecord[];
 }
+
+export interface EnrichedActivityItem extends CustodyRecord {
+  assetTag: string;
+  assetName: string;
+  assetCategory: AssetCategory | string;
+  assetBrand: string;
+  assetImage?: string;
+  assetStatus: AssetStatus | string;
+  locationOrBranch?: string;
+}
+

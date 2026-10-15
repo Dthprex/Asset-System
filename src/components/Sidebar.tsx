@@ -12,7 +12,8 @@ import {
   ChevronLeft, 
   ChevronRight,
   Sparkles,
-  CalendarCheck
+  CalendarCheck,
+  Activity
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -74,6 +75,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: CalendarCheck,
       active: pathname === '/maintenance',
     },
+    {
+      label: 'Live Activity Stream',
+      href: '/activity',
+      icon: Activity,
+      isLive: true,
+      active: pathname === '/activity',
+    },
   ];
 
   return (
@@ -133,7 +141,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 
                 {!isCollapsed && (
                   <div className="flex-1 flex items-center justify-between">
-                    <span className="truncate">{item.label}</span>
+                    <span className="truncate flex items-center gap-2">
+                      {item.label}
+                      {item.isLive && (
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#c28551] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-[#c28551]"></span>
+                        </span>
+                      )}
+                    </span>
                     {item.badge && (
                       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border shadow-2xs ${item.badgeColor || 'bg-[#faece2] text-[#c28551] border-[#ead7c7]'}`}>
                         {item.badge}

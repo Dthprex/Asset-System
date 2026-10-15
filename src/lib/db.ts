@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket, MaintenanceRecord } from '@/types/asset';
+import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket, MaintenanceRecord, EnrichedActivityItem } from '@/types/asset';
 import { calculateDuration, calculateNextBiannualDate } from './utils';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
@@ -518,4 +518,75 @@ export async function completeMaintenance(
   await writeDatabase(db);
   return { record: updatedRecord, nextRoutineRecord };
 }
+
+export async function getEnrichedActivityHistory(params?: {
+  action?: string;
+  branch?: string;
+  search?: string;
+  limit?: number;
+}): Promise<{
+  activities: EnrichedActivityItem[];
+  total: number;
+  latestTimestamp: string;
+}> {
+  const db = await readDatabase();
+  const assetMap = new Map<string, Asset>();
+  for (const a of db.assets) {
+    assetMap.set(a.id, a);
+  }
+
+  let enriched: EnrichedActivityItem[] = (db.custodyHistory || []).map((h) => {
+    const asset = assetMap.get(h.assetId);
+    return {
+      ...h,
+      assetTag: asset?.assetTag || 'AST-???',
+      assetName: asset?.name || 'Unknown Hardware',
+      assetCategory: asset?.category || 'Hardware',
+      assetBrand: asset?.brand || 'cosmetics.lk Fleet',
+      assetImage: asset?.images?.[0] || undefined,
+      assetStatus: asset?.status || 'AVAILABLE',
+      locationOrBranch: asset?.currentAssignment?.locationOrBranch || (h.newHolder.includes('(') ? h.newHolder.split('(')[1].replace(')', '') : undefined),
+    };
+  });
+
+  // Filter by action
+  if (params?.action && params.action !== 'ALL') {
+    enriched = enriched.filter((a) => a.action === params.action);
+  }
+
+  // Filter by branch
+  if (params?.branch && params.branch !== 'ALL') {
+    const qBranch = params.branch.toLowerCase();
+    enriched = enriched.filter((a) =>
+      (a.locationOrBranch && a.locationOrBranch.toLowerCase().includes(qBranch)) ||
+      a.newHolder.toLowerCase().includes(qBranch) ||
+      a.previousHolder.toLowerCase().includes(qBranch)
+    );
+  }
+
+  // Filter by search query
+  if (params?.search && params.search.trim().length > 0) {
+    const query = params.search.toLowerCase().trim();
+    enriched = enriched.filter((a) =>
+      a.assetTag.toLowerCase().includes(query) ||
+      a.assetName.toLowerCase().includes(query) ||
+      a.performedBy.toLowerCase().includes(query) ||
+      a.newHolder.toLowerCase().includes(query) ||
+      a.previousHolder.toLowerCase().includes(query) ||
+      (a.notes && a.notes.toLowerCase().includes(query)) ||
+      (a.damages && a.damages.toLowerCase().includes(query))
+    );
+  }
+
+  const total = enriched.length;
+  const latestTimestamp = enriched[0]?.date || new Date().toISOString();
+
+  const limit = params?.limit && params.limit > 0 ? params.limit : 100;
+  return {
+    activities: enriched.slice(0, limit),
+    total,
+    latestTimestamp,
+  };
+}
+
 
