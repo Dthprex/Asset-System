@@ -2,8 +2,195 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Asset, CurrentAssignment, CustodyRecord, DatabaseSchema, Branch, Department, RepairTicket, MaintenanceRecord, EnrichedActivityItem } from '@/types/asset';
 import { calculateDuration, calculateNextBiannualDate } from './utils';
+import { getSupabase, isSupabaseConfigured } from './supabase';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
+
+// --- Supabase PostgreSQL Data Mappers ---
+function mapRowToAsset(row: any): Asset {
+  return {
+    id: row.id,
+    assetTag: row.asset_tag,
+    name: row.name,
+    category: row.category,
+    brand: row.brand,
+    modelNumber: row.model_number || '',
+    serialNumber: row.serial_number,
+    hasSim: Boolean(row.has_sim),
+    imei1: row.imei1 || undefined,
+    imei2: row.imei2 || undefined,
+    condition: row.condition,
+    purchaseDate: row.purchase_date,
+    warrantyEndDate: row.warranty_end_date,
+    purchaseLocation: row.purchase_location,
+    purchaseAmount: Number(row.purchase_amount) || 0,
+    currency: row.currency || 'LKR',
+    invoiceDoc: row.invoice_doc || undefined,
+    images: row.images || [],
+    status: row.status,
+    currentAssignment: row.current_assignment || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function mapAssetToRow(asset: Asset): any {
+  return {
+    id: asset.id,
+    asset_tag: asset.assetTag,
+    name: asset.name,
+    category: asset.category,
+    brand: asset.brand,
+    model_number: asset.modelNumber || '',
+    serial_number: asset.serialNumber,
+    has_sim: asset.hasSim,
+    imei1: asset.imei1 || null,
+    imei2: asset.imei2 || null,
+    condition: asset.condition,
+    purchase_date: asset.purchaseDate,
+    warranty_end_date: asset.warrantyEndDate,
+    purchase_location: asset.purchaseLocation,
+    purchase_amount: asset.purchaseAmount,
+    currency: asset.currency || 'LKR',
+    invoice_doc: asset.invoiceDoc || null,
+    images: asset.images || [],
+    status: asset.status,
+    current_assignment: asset.currentAssignment || null,
+    created_at: asset.createdAt,
+    updated_at: asset.updatedAt,
+  };
+}
+
+function mapRowToCustody(row: any): CustodyRecord {
+  return {
+    id: row.id,
+    assetId: row.asset_id,
+    action: row.action,
+    date: row.date,
+    performedBy: row.performed_by,
+    previousHolder: row.previous_holder,
+    newHolder: row.new_holder,
+    assignmentType: row.assignment_type,
+    duration: row.duration || undefined,
+    conditionUponReturn: row.condition_upon_return || undefined,
+    damages: row.damages || undefined,
+    notes: row.notes || undefined,
+    returnPhotos: row.return_photos || [],
+  };
+}
+
+function mapCustodyToRow(c: CustodyRecord): any {
+  return {
+    id: c.id,
+    asset_id: c.assetId,
+    action: c.action,
+    date: c.date,
+    performed_by: c.performedBy,
+    previous_holder: c.previousHolder,
+    new_holder: c.newHolder,
+    assignment_type: c.assignmentType,
+    duration: c.duration || null,
+    condition_upon_return: c.conditionUponReturn || null,
+    damages: c.damages || null,
+    notes: c.notes || null,
+    return_photos: c.returnPhotos || [],
+  };
+}
+
+function mapRowToRepair(row: any): RepairTicket {
+  return {
+    id: row.id,
+    assetId: row.asset_id,
+    assetTag: row.asset_tag,
+    assetName: row.asset_name,
+    vendorName: row.vendor_name,
+    vendorContact: row.vendor_contact || '',
+    serviceCenterLocation: row.service_center_location || '',
+    rmaNumber: row.rma_number,
+    issueDescription: row.issue_description,
+    estimatedCostLKR: Number(row.estimated_cost_lkr) || 0,
+    actualCostLKR: row.actual_cost_lkr ? Number(row.actual_cost_lkr) : undefined,
+    isCoveredByWarranty: Boolean(row.is_covered_by_warranty),
+    dispatchedDate: row.dispatched_date,
+    expectedReturnDate: row.expected_return_date || '',
+    completedDate: row.completed_date || undefined,
+    status: row.status,
+    notes: row.notes || undefined,
+    invoiceDoc: row.invoice_doc || undefined,
+    dispatchedBy: row.dispatched_by || 'IT Asset Admin',
+  };
+}
+
+function mapRepairToRow(r: RepairTicket): any {
+  return {
+    id: r.id,
+    asset_id: r.assetId,
+    asset_tag: r.assetTag,
+    asset_name: r.assetName,
+    vendor_name: r.vendorName,
+    vendor_contact: r.vendorContact || null,
+    service_center_location: r.serviceCenterLocation || null,
+    rma_number: r.rmaNumber,
+    issue_description: r.issueDescription,
+    estimated_cost_lkr: r.estimatedCostLKR,
+    actual_cost_lkr: r.actualCostLKR || null,
+    is_covered_by_warranty: r.isCoveredByWarranty,
+    dispatched_date: r.dispatchedDate,
+    expected_return_date: r.expectedReturnDate || null,
+    completed_date: r.completedDate || null,
+    status: r.status,
+    notes: r.notes || null,
+    invoice_doc: r.invoiceDoc || null,
+    dispatched_by: r.dispatchedBy,
+  };
+}
+
+function mapRowToMaintenance(row: any): MaintenanceRecord {
+  return {
+    id: row.id,
+    assetId: row.asset_id,
+    assetTag: row.asset_tag,
+    assetName: row.asset_name,
+    category: row.category,
+    type: row.type,
+    scheduledDate: row.scheduled_date,
+    completedDate: row.completed_date || undefined,
+    status: row.status,
+    inspector: row.inspector,
+    checklist: row.checklist || {},
+    healthGrade: row.health_grade || undefined,
+    batteryHealthPercent: row.battery_health_percent || undefined,
+    findings: row.findings || undefined,
+    actionTaken: row.action_taken || undefined,
+    costLKR: row.cost_lkr ? Number(row.cost_lkr) : undefined,
+    nextScheduledDate: row.next_scheduled_date,
+    notes: row.notes || undefined,
+    createdAt: row.created_at,
+  };
+}
+
+function mapMaintenanceToRow(m: MaintenanceRecord): any {
+  return {
+    id: m.id,
+    asset_id: m.assetId,
+    asset_tag: m.assetTag,
+    asset_name: m.assetName,
+    category: m.category,
+    type: m.type,
+    scheduled_date: m.scheduledDate,
+    completed_date: m.completedDate || null,
+    status: m.status,
+    inspector: m.inspector,
+    checklist: m.checklist || {},
+    health_grade: m.healthGrade || null,
+    battery_health_percent: m.batteryHealthPercent || null,
+    findings: m.findings || null,
+    action_taken: m.actionTaken || null,
+    cost_lkr: m.costLKR || 0,
+    next_scheduled_date: m.nextScheduledDate,
+    notes: m.notes || null,
+  };
+}
 
 export async function readDatabase(): Promise<DatabaseSchema> {
   try {
@@ -34,11 +221,48 @@ export async function writeDatabase(data: DatabaseSchema): Promise<void> {
 }
 
 export async function getAllAssets(): Promise<Asset[]> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data.map(mapRowToAsset);
+      }
+    } catch (e) {
+      console.warn('Supabase query failed, falling back to local JSON:', e);
+    }
+  }
   const db = await readDatabase();
   return db.assets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAssetById(id: string): Promise<{ asset: Asset; history: CustodyRecord[] } | null> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data: assetRow } = await supabase
+        .from('assets')
+        .select('*')
+        .or(`id.eq.${id},asset_tag.ilike.${id}`)
+        .maybeSingle();
+
+      if (assetRow) {
+        const { data: historyRows } = await supabase
+          .from('custody_history')
+          .select('*')
+          .eq('asset_id', assetRow.id)
+          .order('date', { ascending: false });
+
+        return {
+          asset: mapRowToAsset(assetRow),
+          history: (historyRows || []).map(mapRowToCustody),
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase query failed, falling back to local JSON:', e);
+    }
+  }
+
   const db = await readDatabase();
   const asset = db.assets.find((a) => a.id === id || a.assetTag.toLowerCase() === id.toLowerCase());
   if (!asset) return null;
@@ -84,8 +308,9 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
   db.custodyHistory.unshift(intakeHistory);
 
   // If initial assignment was provided upon intake, record it too
+  let assignHistory: CustodyRecord | null = null;
   if (newAsset.currentAssignment) {
-    const assignHistory: CustodyRecord = {
+    assignHistory = {
       id: `HIS-${(Date.now() + 1).toString().slice(-6)}`,
       assetId: newId,
       action: 'ASSIGNED',
@@ -100,6 +325,20 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
   }
 
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').insert(mapAssetToRow(newAsset));
+      await supabase.from('custody_history').insert(mapCustodyToRow(intakeHistory));
+      if (assignHistory) {
+        await supabase.from('custody_history').insert(mapCustodyToRow(assignHistory));
+      }
+    } catch (e) {
+      console.warn('Supabase sync insert failed:', e);
+    }
+  }
+
   return newAsset;
 }
 
@@ -159,6 +398,17 @@ export async function assignAsset(
 
   db.custodyHistory.unshift(newHistory);
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').update(mapAssetToRow(asset)).eq('id', asset.id);
+      await supabase.from('custody_history').insert(mapCustodyToRow(newHistory));
+    } catch (e) {
+      console.warn('Supabase sync assign failed:', e);
+    }
+  }
+
   return asset;
 }
 
@@ -214,22 +464,55 @@ export async function returnAsset(
 
   db.custodyHistory.unshift(returnHistory);
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').update(mapAssetToRow(asset)).eq('id', asset.id);
+      await supabase.from('custody_history').insert(mapCustodyToRow(returnHistory));
+    } catch (e) {
+      console.warn('Supabase sync return failed:', e);
+    }
+  }
+
   return asset;
 }
 
 export async function getBranches(): Promise<Branch[]> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('branches').select('*');
+      if (!error && data && data.length > 0) {
+        return data as Branch[];
+      }
+    } catch (e) {
+      console.warn('Supabase branches query failed:', e);
+    }
+  }
   const db = await readDatabase();
   return db.branches;
 }
 
 export async function getDepartments(): Promise<Department[]> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (!error && data && data.length > 0) {
+        return data as Department[];
+      }
+    } catch (e) {
+      console.warn('Supabase departments query failed:', e);
+    }
+  }
   const db = await readDatabase();
   return db.departments;
 }
 
 export async function getSystemStats() {
   const db = await readDatabase();
-  const assets = db.assets;
+  const assets = await getAllAssets();
   
   const totalAssets = assets.length;
   const totalValueLKR = assets.reduce((sum, a) => sum + (Number(a.purchaseAmount) || 0), 0);
@@ -272,6 +555,17 @@ export async function getSystemStats() {
 }
 
 export async function getRepairTickets(): Promise<RepairTicket[]> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('repair_tickets').select('*').order('dispatched_date', { ascending: false });
+      if (!error && data && data.length > 0) {
+        return data.map(mapRowToRepair);
+      }
+    } catch (e) {
+      console.warn('Supabase repair tickets query failed:', e);
+    }
+  }
   const db = await readDatabase();
   return (db.repairTickets || []).sort(
     (a, b) => new Date(b.dispatchedDate).getTime() - new Date(a.dispatchedDate).getTime()
@@ -530,12 +824,29 @@ export async function getEnrichedActivityHistory(params?: {
   latestTimestamp: string;
 }> {
   const db = await readDatabase();
+  const allAssets = await getAllAssets();
   const assetMap = new Map<string, Asset>();
-  for (const a of db.assets) {
+  for (const a of allAssets) {
     assetMap.set(a.id, a);
   }
 
-  let enriched: EnrichedActivityItem[] = (db.custodyHistory || []).map((h) => {
+  const supabase = getSupabase();
+  let rawHistory: CustodyRecord[] = [];
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('custody_history').select('*').order('date', { ascending: false });
+      if (!error && data && data.length > 0) {
+        rawHistory = data.map(mapRowToCustody);
+      }
+    } catch (e) {
+      console.warn('Supabase activity history query failed:', e);
+    }
+  }
+  if (rawHistory.length === 0) {
+    rawHistory = db.custodyHistory || [];
+  }
+
+  let enriched: EnrichedActivityItem[] = rawHistory.map((h) => {
     const asset = assetMap.get(h.assetId);
     return {
       ...h,
