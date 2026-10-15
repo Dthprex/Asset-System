@@ -54,13 +54,66 @@ body {
 }
 
 .luxury-card-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1), border-color 220ms ease;
 }
 
 .luxury-card-hover:hover {
-  box-shadow: 0 10px 25px -5px rgba(194, 133, 81, 0.12), 0 8px 10px -6px rgba(194, 133, 81, 0.06);
+  box-shadow: 0 12px 28px -6px rgba(194, 133, 81, 0.14), 0 6px 12px -4px rgba(194, 133, 81, 0.08);
   border-color: #dfae85;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+}
+
+/* Emil Kowalski & Apple Design Tactile System */
+.btn-press {
+  transition: transform 120ms cubic-bezier(0.2, 0, 0, 1), opacity 120ms ease;
+  will-change: transform;
+}
+
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+.btn-press-sm:active {
+  transform: scale(0.95);
+}
+
+/* Translucent Frosted Glass */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(240, 230, 222, 0.85);
+}
+
+.glass-pill {
+  background: rgba(251, 245, 239, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(234, 215, 199, 0.7);
+}
+
+.glow-terracotta {
+  box-shadow: 0 0 25px -4px rgba(194, 133, 81, 0.18);
+}
+
+.glow-terracotta-sm {
+  box-shadow: 0 0 14px -2px rgba(194, 133, 81, 0.15);
+}
+
+/* Natural deceleration spring animation for slide-overs */
+@keyframes slideInRightSpring {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-drawer-spring {
+  animation: slideInRightSpring 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Print styles for QR Asset Labels */

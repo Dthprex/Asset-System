@@ -36,11 +36,26 @@ function BranchesContent() {
     <div className="space-y-6">
       
       {/* Page Header */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Showrooms & Regional Deployments</h1>
-        <p className="text-xs text-slate-500">
-          Track hardware equipment, POS terminals, and digital iPads deployed across cosmetics.lk retail outlets
-        </p>
+      <div className="p-6 rounded-3xl bg-[#fbf5ef] border border-[#f0e6de] luxury-card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f4e6d8] text-[#844c1d] border border-[#c28551]/30">
+              Retail Network
+            </span>
+            <span className="text-xs text-slate-400 font-mono">• 8 Islandwide Boutiques</span>
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Showrooms & Regional Deployments</h1>
+          <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
+            Track hardware equipment, POS terminals, and digital iPads deployed across cosmetics.lk retail outlets and headquarters.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="px-4 py-2 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Showroom Gear</span>
+            <span className="text-base font-extrabold text-[#c28551]">{assets.length} Assets</span>
+          </div>
+        </div>
       </div>
 
       {/* Showrooms Grid */}
@@ -49,10 +64,10 @@ function BranchesContent() {
         {/* All Showrooms Card */}
         <button
           onClick={() => setSelectedBranchId('ALL')}
-          className={`p-4 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+          className={`p-4 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between btn-press-sm ${
             selectedBranchId === 'ALL'
-              ? 'bg-[#fbf5ef] border-[#c28551] shadow-xs ring-1 ring-[#c28551]/30'
-              : 'bg-white border-slate-200 hover:border-slate-300'
+              ? 'bg-[#fbf5ef] border-[#c28551] shadow-xs ring-1 ring-[#c28551]/30 glow-terracotta'
+              : 'bg-white border-slate-200/90 hover:border-slate-300 luxury-card-hover'
           }`}
         >
           <div>
@@ -61,7 +76,7 @@ function BranchesContent() {
           </div>
           <div className="mt-3 flex items-center justify-between text-xs">
             <span className="font-semibold text-[#c28551]">{assets.length} Total Devices</span>
-            <span className="text-slate-400 text-[11px]">8 Branches</span>
+            <span className="text-slate-400 text-[11px] font-mono">8 Branches</span>
           </div>
         </button>
 
@@ -72,10 +87,10 @@ function BranchesContent() {
             <button
               key={b.id}
               onClick={() => setSelectedBranchId(b.id)}
-              className={`p-4 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
+              className={`p-4 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between btn-press-sm ${
                 isSelected
-                  ? 'bg-[#fbf5ef] border-[#c28551] shadow-xs ring-1 ring-[#c28551]/30'
-                  : 'bg-white border-slate-200 hover:border-slate-300'
+                  ? 'bg-[#fbf5ef] border-[#c28551] shadow-xs ring-1 ring-[#c28551]/30 glow-terracotta'
+                  : 'bg-white border-slate-200/90 hover:border-slate-300 luxury-card-hover'
               }`}
             >
               <div>
@@ -90,7 +105,7 @@ function BranchesContent() {
 
               <div className="mt-3 flex items-center justify-between text-xs pt-2 border-t border-slate-100">
                 <span className="font-bold text-[#c28551]">{b.count} {b.count === 1 ? 'Device' : 'Devices'}</span>
-                <span className="font-semibold text-slate-700 text-[11px]">{formatLKR(b.totalValue)}</span>
+                <span className="font-semibold text-slate-700 text-[11px] font-mono">{formatLKR(b.totalValue)}</span>
               </div>
             </button>
           );
@@ -110,7 +125,7 @@ function BranchesContent() {
           {selectedBranchId !== 'ALL' && (
             <button
               onClick={() => setSelectedBranchId('ALL')}
-              className="text-xs font-semibold text-[#c28551] hover:text-[#a66c3b]"
+              className="text-xs font-semibold text-[#c28551] hover:text-[#a66c3b] btn-press-sm px-2.5 py-1 rounded-lg hover:bg-[#fbf5ef]"
             >
               Show All Showrooms
             </button>
@@ -118,7 +133,7 @@ function BranchesContent() {
         </div>
 
         {displayedAssets.length === 0 ? (
-          <div className="py-12 text-center bg-white rounded-3xl border border-slate-200 p-6">
+          <div className="py-14 text-center bg-white rounded-3xl border border-slate-200/90 luxury-card-shadow p-6">
             <Store className="w-10 h-10 text-slate-300 mx-auto mb-2" />
             <div className="text-xs font-bold text-slate-800">No equipment currently assigned to this showroom</div>
             <p className="text-[11px] text-slate-500 mt-0.5">Use the inventory tab or assign modal to deploy hardware here.</p>
@@ -129,14 +144,14 @@ function BranchesContent() {
               <div
                 key={asset.id}
                 onClick={() => openDetail(asset)}
-                className="p-4 rounded-2xl bg-white border border-slate-200/80 hover:border-[#c28551]/50 hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3"
+                className="p-4 rounded-2xl bg-white border border-slate-200/90 luxury-card-shadow luxury-card-hover btn-press cursor-pointer flex flex-col justify-between space-y-3"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 shrink-0">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 shrink-0">
                     <img src={asset.images[0]} alt={asset.name} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-[10px] font-bold text-[#c28551] bg-[#fbf5ef] px-2 py-0.5 rounded border border-[#c28551]/20">
+                    <span className="text-[10px] font-bold text-[#c28551] bg-[#fbf5ef] px-2 py-0.5 rounded border border-[#c28551]/20 font-mono">
                       {asset.assetTag}
                     </span>
                     <h3 className="text-xs font-bold text-slate-900 truncate mt-1">{asset.name}</h3>
@@ -148,7 +163,7 @@ function BranchesContent() {
                   <span className="text-slate-600 font-medium truncate text-[11px]">
                     {asset.currentAssignment?.assignedToName || 'Unassigned'}
                   </span>
-                  <span className="font-bold text-slate-900 text-[11px]">
+                  <span className="font-bold text-slate-900 text-[11px] font-mono">
                     {formatLKR(asset.purchaseAmount)}
                   </span>
                 </div>

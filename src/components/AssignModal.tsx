@@ -119,13 +119,13 @@ export const AssignModal: React.FC<AssignModalProps> = ({
       >
         
         {/* Header */}
-        <div className="p-6 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between">
+        <div className="p-6 bg-[#fbf5ef]/70 border-b border-[#f0e6de] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#fbf5ef] border border-[#c28551]/30 flex items-center justify-center text-[#c28551]">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#c28551]/30 flex items-center justify-center text-[#c28551] shadow-xs">
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">Deploy / Assign Hardware</h2>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Deploy / Assign Hardware</h2>
               <p className="text-xs text-slate-500">
                 {asset.name} • <span className="font-mono text-[#c28551] font-semibold">{asset.assetTag}</span>
               </p>
@@ -134,7 +134,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-white/80 transition btn-press-sm cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -159,7 +159,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAssignmentType('LOCATION_SHOWROOM')}
-                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
                   assignmentType === 'LOCATION_SHOWROOM'
                     ? 'bg-blue-50/80 border-blue-400 text-blue-900 shadow-xs ring-1 ring-blue-300'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -175,7 +175,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAssignmentType('DEPARTMENT_SHARED')}
-                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
                   assignmentType === 'DEPARTMENT_SHARED'
                     ? 'bg-purple-50/80 border-purple-400 text-purple-900 shadow-xs ring-1 ring-purple-300'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -191,9 +191,9 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAssignmentType('PERMANENT_EMPLOYEE')}
-                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
                   assignmentType === 'PERMANENT_EMPLOYEE'
-                    ? 'bg-[#fbf5ef] border-[#c28551] text-[#844c1d] shadow-xs ring-1 ring-[#c28551]/30'
+                    ? 'bg-[#fbf5ef] border-[#c28551] text-[#844c1d] shadow-xs ring-1 ring-[#c28551]/30 glow-terracotta'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                 }`}
               >
@@ -207,7 +207,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <button
                 type="button"
                 onClick={() => setAssignmentType('TEMPORARY_BORROW')}
-                className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
                   assignmentType === 'TEMPORARY_BORROW'
                     ? 'bg-amber-50/80 border-amber-400 text-amber-900 shadow-xs ring-1 ring-amber-300'
                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
@@ -219,7 +219,6 @@ export const AssignModal: React.FC<AssignModalProps> = ({
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">Scheduled return date required</div>
               </button>
-
             </div>
           </div>
 
@@ -342,12 +341,12 @@ export const AssignModal: React.FC<AssignModalProps> = ({
           </div>
 
           {/* Action buttons */}
-          <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-[#f0e6de] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition btn-press-sm cursor-pointer"
             >
               Cancel
             </button>
@@ -355,7 +354,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 cursor-pointer btn-press-sm disabled:opacity-50"
             >
               {submitting ? (
                 <span>Recording...</span>

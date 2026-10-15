@@ -187,7 +187,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition btn-press-sm cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -554,7 +554,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
             <button
               type="button"
               onClick={() => setStep((s) => (s - 1) as any)}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-white text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-white text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition btn-press-sm cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Back</span>
@@ -571,7 +571,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                   if (step === 1 && validateStep1()) setStep(2);
                   if (step === 2 && validateStep2()) setStep(3);
                 }}
-                className="px-5 py-2 rounded-xl bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold flex items-center gap-1.5 transition btn-press-sm cursor-pointer"
               >
                 <span>Continue</span>
                 <ChevronRight className="w-4 h-4" />
@@ -581,7 +581,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmit}
-                className="px-6 py-2 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 disabled:opacity-50 btn-press-sm cursor-pointer"
               >
                 {submitting ? (
                   <span>Registering...</span>

@@ -215,10 +215,10 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
                     key={tag}
                     type="button"
                     onClick={() => toggleDamageTag(tag)}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition cursor-pointer border ${
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition cursor-pointer border btn-press-sm ${
                       isSelected
-                        ? 'bg-[#c28551] text-white border-[#c28551] shadow-xs'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-[#c28551]/40 hover:text-[#c28551]'
+                        ? 'bg-[#c28551] text-white border-[#c28551] shadow-xs ring-1 ring-[#c28551]/30 font-bold'
+                        : 'bg-white text-slate-700 border-slate-200/90 hover:border-[#c28551]/40 hover:text-[#c28551]'
                     }`}
                   >
                     {tag}
@@ -233,7 +233,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
                 value={damageNotes}
                 onChange={(e) => setDamageNotes(e.target.value)}
                 placeholder="Additional specific damage details, e.g. spacebar has liquid stickiness, power brick cord is frayed..."
-                className="w-full mt-2 px-3 py-2 rounded-xl bg-white border border-[#c28551]/30 text-slate-900 text-xs focus:ring-1 focus:ring-[#c28551] placeholder-slate-400"
+                className="w-full mt-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#c28551]/30 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 placeholder-slate-400"
               />
             </div>
           </div>
@@ -251,12 +251,12 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
           </div>
 
           {/* Actions */}
-          <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-[#f0e6de] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold transition btn-press-sm cursor-pointer"
             >
               Cancel
             </button>
@@ -264,7 +264,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 cursor-pointer btn-press-sm disabled:opacity-50"
             >
               {submitting ? (
                 <span>Checking In...</span>

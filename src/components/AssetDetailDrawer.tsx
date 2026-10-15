@@ -84,12 +84,12 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 
       {/* Drawer Container */}
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-xl bg-white shadow-2xl flex flex-col border-l border-[#f0e6de] animate-in slide-in-from-right duration-300">
+        <div className="w-screen max-w-xl bg-white shadow-2xl flex flex-col border-l border-[#f0e6de] animate-drawer-spring">
           
           {/* Drawer Header */}
-          <div className="p-6 bg-[#fbf5ef]/80 border-b border-[#f0e6de] flex items-start justify-between">
+          <div className="p-6 bg-[#fbf5ef]/90 backdrop-blur-md border-b border-[#f0e6de] flex items-start justify-between">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white border border-[#f0e6de] shadow-sm shrink-0">
+              <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white border border-[#f0e6de] shadow-xs shrink-0">
                 <img
                   src={asset.images[0] || 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80'}
                   alt={asset.name}
@@ -99,12 +99,12 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#faece2] text-[#c28551] border border-[#ead7c7]">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#faece2] text-[#c28551] border border-[#ead7c7] shadow-2xs">
                     {asset.category}
                   </span>
                   <button
                     onClick={handleCopyTag}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-[#ead7c7] text-[#1d2939] text-[11px] font-mono hover:bg-[#fbf5ef] transition cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-[#ead7c7] text-[#1d2939] text-[11px] font-mono hover:bg-[#fbf5ef] transition cursor-pointer btn-press-sm"
                     title="Click to copy asset tag"
                   >
                     <span>{asset.assetTag}</span>
@@ -123,7 +123,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer btn-press-sm"
             >
               <X className="w-5 h-5" />
             </button>
@@ -133,9 +133,9 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
           <div className="px-6 bg-white border-b border-[#f0e6de] flex items-center gap-6 text-xs font-semibold">
             <button
               onClick={() => setActiveTab('timeline')}
-              className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
+              className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer btn-press-sm ${
                 activeTab === 'timeline'
-                  ? 'border-[#c28551] text-[#c28551]'
+                  ? 'border-[#c28551] text-[#c28551] font-bold'
                   : 'border-transparent text-slate-500 hover:text-[#1d2939]'
               }`}
             >
@@ -394,10 +394,10 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
           </div>
 
           {/* Drawer Footer Actions */}
-          <div className="p-4 bg-[#fdfbf9] border-t border-[#f0e6de] flex items-center justify-end gap-3">
+          <div className="p-4 bg-[#fdfbf9]/90 backdrop-blur-md border-t border-[#f0e6de] flex items-center justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-white text-xs font-semibold transition cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-white text-xs font-semibold transition cursor-pointer btn-press-sm"
             >
               Close
             </button>
@@ -408,7 +408,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                   onClose();
                   onReturn(asset);
                 }}
-                className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer btn-press"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Return & Inspect Damage</span>
@@ -419,7 +419,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                   onClose();
                   onAssign(asset);
                 }}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-1.5 cursor-pointer btn-press"
               >
                 <ArrowRightLeft className="w-3.5 h-3.5" />
                 <span>Deploy / Loan Item</span>

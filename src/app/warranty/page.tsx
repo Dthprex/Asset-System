@@ -57,13 +57,13 @@ function WarrantyContent() {
     <div className="space-y-6">
 
       {/* Header Banner */}
-      <div className="p-6 rounded-3xl bg-[#fbf5ef] border border-[#c28551]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-6 rounded-3xl bg-[#fbf5ef] border border-[#f0e6de] luxury-card-shadow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f4e6d8] text-[#844c1d] border border-[#c28551]/30">
               Maintenance & Coverage
             </span>
-            <span className="text-xs text-slate-400">• Warranty Tracking</span>
+            <span className="text-xs text-slate-400 font-mono">• Supplier SLA Tracking</span>
           </div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">
             Warranty Alerts & Repair Tickets
@@ -74,19 +74,19 @@ function WarrantyContent() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="p-3 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Under Repair</span>
+          <div className="px-4 py-2.5 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Under Repair</span>
             <span className="text-base font-extrabold text-[#c28551]">{repairCount} Devices</span>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+      <div className="flex items-center gap-2 border-b border-slate-200/90 pb-2 overflow-x-auto">
         <button
           onClick={() => setFilterTab('all')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${filterTab === 'all'
-              ? 'bg-[#fbf5ef] text-[#a66c3b] border border-[#c28551]/30 shadow-xs'
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer btn-press-sm ${filterTab === 'all'
+              ? 'bg-[#fbf5ef] text-[#a66c3b] border border-[#c28551]/40 shadow-xs font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
         >
@@ -95,8 +95,8 @@ function WarrantyContent() {
 
         <button
           onClick={() => setFilterTab('expiring')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${filterTab === 'expiring'
-              ? 'bg-amber-50 text-amber-800 border border-amber-200 shadow-xs'
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 btn-press-sm ${filterTab === 'expiring'
+              ? 'bg-amber-50 text-amber-900 border border-amber-300 shadow-xs font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
         >
@@ -106,8 +106,8 @@ function WarrantyContent() {
 
         <button
           onClick={() => setFilterTab('repair')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${filterTab === 'repair'
-              ? 'bg-rose-50 text-rose-800 border border-rose-200 shadow-xs'
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 btn-press-sm ${filterTab === 'repair'
+              ? 'bg-rose-50 text-rose-900 border border-rose-300 shadow-xs font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
         >
@@ -117,8 +117,8 @@ function WarrantyContent() {
 
         <button
           onClick={() => setFilterTab('expired')}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${filterTab === 'expired'
-              ? 'bg-slate-100 text-slate-800 border border-slate-200 shadow-xs'
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer btn-press-sm ${filterTab === 'expired'
+              ? 'bg-slate-100 text-slate-800 border border-slate-300 shadow-xs font-bold'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
         >
@@ -132,7 +132,7 @@ function WarrantyContent() {
           <div
             key={asset.id}
             onClick={() => openDetail(asset)}
-            className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs hover:border-[#c28551]/50 hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-4"
+            className="p-5 rounded-2xl bg-white border border-slate-200/90 luxury-card-shadow luxury-card-hover btn-press cursor-pointer flex flex-col justify-between space-y-4"
           >
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -162,7 +162,7 @@ function WarrantyContent() {
             )}
 
             {/* Vendor & Price */}
-            <div className="pt-2 border-t border-slate-100 text-xs space-y-1">
+            <div className="pt-2 border-t border-slate-100 text-xs space-y-1.5">
               <div className="flex items-center justify-between text-slate-500">
                 <span>Vendor:</span>
                 <span className="font-semibold text-slate-800">{asset.purchaseLocation}</span>
@@ -173,7 +173,7 @@ function WarrantyContent() {
               </div>
               <div className="flex items-center justify-between text-slate-500">
                 <span>Fleet Value:</span>
-                <span className="font-bold text-[#c28551]">{formatLKR(asset.purchaseAmount)}</span>
+                <span className="font-bold text-[#c28551] font-mono">{formatLKR(asset.purchaseAmount)}</span>
               </div>
             </div>
 

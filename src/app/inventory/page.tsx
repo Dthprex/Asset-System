@@ -137,12 +137,12 @@ function InventoryContent() {
             </select>
 
             {/* View Mode Switcher */}
-            <div className="flex items-center p-1 rounded-xl bg-[#fbf5ef] border border-[#ead7c7]">
+            <div className="flex items-center p-1 rounded-xl bg-[#fbf5ef] border border-[#ead7c7] shadow-2xs">
               <button
                 onClick={() => setViewMode('table')}
                 title="Table View"
-                className={`p-1.5 rounded-lg transition cursor-pointer ${
-                  viewMode === 'table' ? 'bg-white text-[#c28551] shadow-xs' : 'text-slate-400 hover:text-slate-700'
+                className={`p-1.5 rounded-lg transition cursor-pointer btn-press-sm ${
+                  viewMode === 'table' ? 'bg-white text-[#c28551] shadow-xs glow-terracotta-sm' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 <ListFilter className="w-3.5 h-3.5" />
@@ -150,8 +150,8 @@ function InventoryContent() {
               <button
                 onClick={() => setViewMode('grid')}
                 title="Grid Cards View"
-                className={`p-1.5 rounded-lg transition cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-white text-[#c28551] shadow-xs' : 'text-slate-400 hover:text-slate-700'
+                className={`p-1.5 rounded-lg transition cursor-pointer btn-press-sm ${
+                  viewMode === 'grid' ? 'bg-white text-[#c28551] shadow-xs glow-terracotta-sm' : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -161,7 +161,7 @@ function InventoryContent() {
             {(searchQuery || selectedCategory !== 'ALL' || selectedStatus !== 'ALL' || selectedBranch !== 'ALL') && (
               <button
                 onClick={handleResetFilters}
-                className="px-2.5 py-2 rounded-xl bg-[#fbf5ef] hover:bg-[#faece2] text-[#c28551] text-xs font-semibold transition"
+                className="px-2.5 py-2 rounded-xl bg-[#fbf5ef] hover:bg-[#faece2] text-[#c28551] text-xs font-semibold transition btn-press-sm"
               >
                 Reset
               </button>
@@ -178,10 +178,10 @@ function InventoryContent() {
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer border ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer border btn-press-sm ${
                   isSelected
-                    ? 'bg-[#faece2] text-[#c28551] border-[#c28551] shadow-2xs font-bold'
-                    : 'bg-white text-slate-600 border-[#f0e6de] hover:border-[#ead7c7] hover:text-[#1d2939]'
+                    ? 'bg-[#faece2] text-[#c28551] border-[#c28551] shadow-xs glow-terracotta-sm font-bold'
+                    : 'bg-white/90 text-slate-600 border-[#f0e6de] hover:border-[#ead7c7] hover:text-[#1d2939] hover:bg-[#fbf5ef]'
                 }`}
               >
                 {cat.label}
@@ -295,7 +295,7 @@ function InventoryContent() {
                         <button
                           onClick={() => openDetail(asset)}
                           title="View Specs & Timeline"
-                          className="p-1.5 rounded-lg border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#fbf5ef] transition cursor-pointer"
+                          className="p-1.5 rounded-lg border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#fbf5ef] transition cursor-pointer btn-press-sm"
                         >
                           <History className="w-3.5 h-3.5 text-[#c28551]" />
                         </button>
@@ -304,7 +304,7 @@ function InventoryContent() {
                           <button
                             onClick={() => openReturn(asset)}
                             title="Return and Damage Inspection"
-                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer btn-press-sm"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                           </button>
@@ -312,7 +312,7 @@ function InventoryContent() {
                           <button
                             onClick={() => openAssign(asset)}
                             title="Deploy or Loan"
-                            className="p-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white transition cursor-pointer btn-press-sm"
                           >
                             <ArrowRightLeft className="w-3.5 h-3.5" />
                           </button>
@@ -330,7 +330,7 @@ function InventoryContent() {
           {filteredAssets.map((asset) => (
             <div
               key={asset.id}
-              className="bg-white rounded-2xl border border-[#f0e6de] overflow-hidden shadow-xs hover:border-[#c28551] hover:shadow-md transition flex flex-col justify-between"
+              className="bg-white rounded-2xl border border-[#f0e6de] overflow-hidden luxury-card-shadow luxury-card-hover flex flex-col justify-between"
             >
               <div className="p-4 space-y-3">
                 <div className="flex items-start gap-3">
@@ -379,7 +379,7 @@ function InventoryContent() {
               <div className="p-3 bg-[#fdfbf9] border-t border-[#f0e6de] flex items-center justify-between gap-2">
                 <button
                   onClick={() => openDetail(asset)}
-                  className="flex-1 py-1.5 rounded-lg border border-[#f0e6de] hover:bg-white text-slate-700 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1"
+                  className="flex-1 py-1.5 rounded-lg border border-[#f0e6de] hover:bg-white text-slate-700 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1 btn-press-sm"
                 >
                   <History className="w-3.5 h-3.5 text-[#c28551]" />
                   <span>Timeline</span>
@@ -388,7 +388,7 @@ function InventoryContent() {
                 {asset.currentAssignment ? (
                   <button
                     onClick={() => openReturn(asset)}
-                    className="flex-1 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1 btn-press-sm"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Return</span>
@@ -396,7 +396,7 @@ function InventoryContent() {
                 ) : (
                   <button
                     onClick={() => openAssign(asset)}
-                    className="flex-1 py-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1"
+                    className="flex-1 py-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1 btn-press-sm"
                   >
                     <ArrowRightLeft className="w-3.5 h-3.5" />
                     <span>Deploy</span>

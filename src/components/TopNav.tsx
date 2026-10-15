@@ -47,30 +47,35 @@ export const TopNav: React.FC<TopNavProps> = ({
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 h-20 bg-white/95 backdrop-blur-xl border-b border-[#f0e6de] px-4 sm:px-8 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 h-20 bg-white/80 backdrop-blur-xl border-b border-[#f0e6de]/80 px-4 sm:px-8 flex items-center justify-between gap-4 transition-all duration-200">
       
       {/* Global Search Bar */}
-      <div className="flex-1 max-w-md relative">
+      <div className="flex-1 max-w-md relative group">
         <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-          <Search className="w-4 h-4 text-[#c28551]" />
+          <Search className="w-4 h-4 text-[#c28551] transition-transform duration-200 group-focus-within:scale-110" />
         </div>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
           placeholder="Global Fleet Search (Tag, Serial, Dual IMEI, Custodian, Vendor)..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#f0e6de] text-xs sm:text-sm text-[#1d2939] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+          className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-[#fdfbf9]/90 border border-[#f0e6de] text-xs sm:text-sm text-[#1d2939] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#c28551]/25 focus:border-[#c28551] focus:bg-white shadow-2xs transition-all duration-150"
         />
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-mono font-medium text-slate-400 bg-slate-100 border border-slate-200">
+            ⌘K
+          </kbd>
+        </div>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 sm:gap-3">
         
         {/* Asia/Colombo Live Clock */}
-        <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-[#fbf5ef] border border-[#ead7c7] text-xs">
+        <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass-pill text-xs shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#c28551] animate-pulse"></span>
-          <span className="font-semibold text-[#c28551]">Colombo Time:</span>
-          <span className="font-mono text-[#1d2939] font-medium">{colomboTime || 'Syncing...'}</span>
+          <span className="font-bold text-[#c28551]">Colombo:</span>
+          <span className="font-mono text-[#1d2939] font-semibold">{colomboTime || 'Syncing...'}</span>
         </div>
 
         {/* Refresh Button */}
@@ -79,7 +84,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             onClick={onRefresh}
             disabled={isRefreshing}
             title="Refresh Inventory"
-            className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#faf7f3] transition disabled:opacity-50 cursor-pointer"
+            className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#faf7f3] transition disabled:opacity-50 cursor-pointer btn-press-sm"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#c28551]' : ''}`} />
           </button>
@@ -88,10 +93,10 @@ export const TopNav: React.FC<TopNavProps> = ({
         {/* Primary Intake Button in cosmetics.lk signature gold */}
         <button
           onClick={onOpenNewAssetModal}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 hover:shadow-lg hover:shadow-[#c28551]/30 transition flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 hover:shadow-lg hover:shadow-[#c28551]/30 transition-all flex items-center gap-2 cursor-pointer btn-press"
         >
           <Plus className="w-4 h-4" />
-          <span>Intake New Hardware</span>
+          <span className="tracking-wide">Intake New Hardware</span>
         </button>
 
       </div>

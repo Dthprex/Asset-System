@@ -81,36 +81,40 @@ function DashboardContent() {
     <div className="space-y-8">
       
       {/* Welcome Banner in cosmetics.lk signature gold theme */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#fbf3ec] via-[#fdfbf9] to-transparent border border-[#ead7c7] flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1.5">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#faece2] text-[#c28551] border border-[#ead7c7]">
-              Operations Command
-            </span>
-            <span className="text-xs text-slate-400">• cosmetics.lk IT Infrastructure</span>
+      <div className="p-6 sm:p-8 rounded-3xl glass-panel relative overflow-hidden shadow-xs">
+        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-gradient-to-br from-[#c28551]/10 to-transparent blur-2xl pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#faece2] text-[#c28551] border border-[#ead7c7] shadow-2xs">
+                Operations Command
+              </span>
+              <span className="text-xs text-slate-400 font-medium">• cosmetics.lk IT Infrastructure</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-[#1d2939] tracking-tight">
+              Enterprise Fleet & Custody Command Center
+            </h1>
+            <p className="text-xs text-slate-600 mt-1.5 max-w-xl leading-relaxed">
+              Real-time tracking of hardware, cameras, barcode POS, and cellular tablets across Colombo Flagship, KCC Kandy, Nawala HQ, OGF, Negombo, and Kelaniya logistics.
+            </p>
           </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[#1d2939] tracking-tight">
-            Enterprise Fleet & Custody Command Center
-          </h1>
-          <p className="text-xs text-slate-600 mt-1 max-w-xl">
-            Real-time tracking of computers, cameras, barcode scanners, and tablets across Colombo Flagship, Kandy City Centre, Nawala HQ, and regional showrooms.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <Link
-            href="/inventory"
-            className="px-4 py-2.5 rounded-xl border border-[#ead7c7] hover:bg-white text-[#1d2939] text-xs font-semibold transition"
-          >
-            Browse Fleet
-          </Link>
-          <button
-            onClick={openNewIntake}
-            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 transition flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Intake Item</span>
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              href="/inventory"
+              className="px-4 py-2.5 rounded-xl border border-[#ead7c7] bg-white/70 hover:bg-white text-[#1d2939] text-xs font-semibold shadow-2xs transition btn-press"
+            >
+              Browse Fleet
+            </Link>
+            <button
+              onClick={openNewIntake}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c28551] to-[#dfae85] hover:from-[#b07440] hover:to-[#cb8e5c] text-white text-xs font-semibold shadow-md shadow-[#c28551]/20 hover:shadow-lg hover:shadow-[#c28551]/30 transition-all flex items-center gap-2 cursor-pointer btn-press"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Intake Hardware</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -121,11 +125,11 @@ function DashboardContent() {
           return (
             <div
               key={idx}
-              className={`p-4 rounded-2xl bg-white border ${m.borderColor} shadow-xs space-y-3 flex flex-col justify-between`}
+              className={`p-4 rounded-2xl bg-white/95 border ${m.borderColor} luxury-card-shadow luxury-card-hover space-y-3 flex flex-col justify-between`}
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-slate-500 truncate">{m.title}</span>
-                <div className={`p-1.5 rounded-lg ${m.bgColor} ${m.color}`}>
+                <div className={`p-1.5 rounded-xl ${m.bgColor} ${m.color} shadow-2xs`}>
                   <Icon className="w-4 h-4" />
                 </div>
               </div>
@@ -151,7 +155,7 @@ function DashboardContent() {
             </h2>
             <Link
               href="/inventory"
-              className="text-xs font-semibold text-[#c28551] hover:text-[#b07440] flex items-center gap-1"
+              className="text-xs font-semibold text-[#c28551] hover:text-[#b07440] flex items-center gap-1 btn-press-sm"
             >
               <span>View All ({assets.length})</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -163,7 +167,7 @@ function DashboardContent() {
               <div
                 key={asset.id}
                 onClick={() => openDetail(asset)}
-                className="p-4 rounded-2xl bg-white border border-[#f0e6de] hover:border-[#c28551] hover:shadow-md transition cursor-pointer flex flex-col justify-between space-y-3"
+                className="p-4 rounded-2xl bg-white border border-[#f0e6de] luxury-card-shadow luxury-card-hover cursor-pointer flex flex-col justify-between space-y-3 btn-press"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-50 shrink-0 border border-[#f0e6de]">
@@ -192,36 +196,47 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Right 1 Col: Recent Custody Audit Feed */}
+        {/* Right 1 Col: Recent Custody Audit Feed & Fleet Health */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold text-[#1d2939] flex items-center gap-2">
               <History className="w-4 h-4 text-[#c28551]" />
               <span>Custody Activity Log</span>
             </h2>
-            <span className="text-[11px] text-slate-400">Live feed</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live Feed
+            </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-[#f0e6de] space-y-3.5 shadow-xs">
-            {stats.recentHistory && stats.recentHistory.slice(0, 5).map((h: any, idx: number) => (
-              <div key={idx} className="flex items-start gap-3 text-xs pb-3 border-b border-[#f4ebe4] last:border-0 last:pb-0">
-                <div className="w-2 h-2 rounded-full bg-[#c28551] mt-1.5 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 mb-0.5">
-                    <span className="font-bold uppercase text-[#1d2939]">{h.action.replace('_', ' ')}</span>
-                    <span className="font-mono">{formatDate(h.date)}</span>
-                  </div>
-                  <div className="font-semibold text-slate-800 truncate">
-                    {h.newHolder}
-                  </div>
-                  {h.damages && (
-                    <div className="text-[10px] text-rose-600 font-medium truncate mt-0.5">
-                      Damage: {h.damages}
+          <div className="p-4 rounded-2xl bg-white border border-[#f0e6de] space-y-3.5 luxury-card-shadow">
+            {stats.recentHistory && stats.recentHistory.slice(0, 5).map((h: any, idx: number) => {
+              const isDamage = h.damages;
+              const isReturn = h.action === 'RETURNED';
+              const isAssign = h.action === 'ASSIGNED';
+
+              return (
+                <div key={idx} className="flex items-start gap-3 text-xs pb-3 border-b border-[#f4ebe4] last:border-0 last:pb-0">
+                  <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${
+                    isDamage ? 'bg-rose-500' : isReturn ? 'bg-blue-500' : isAssign ? 'bg-[#c28551]' : 'bg-emerald-500'
+                  }`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between text-[10px] text-slate-400 mb-0.5">
+                      <span className="font-bold uppercase tracking-wider text-[#1d2939]">{h.action.replace('_', ' ')}</span>
+                      <span className="font-mono">{formatDate(h.date)}</span>
                     </div>
-                  )}
+                    <div className="font-semibold text-slate-800 truncate">
+                      {h.newHolder}
+                    </div>
+                    {h.damages && (
+                      <div className="text-[10px] text-rose-700 font-medium truncate mt-0.5 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded">
+                        Damage: {h.damages}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
