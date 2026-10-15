@@ -8,6 +8,7 @@ import { NewAssetWizardModal } from '@/components/NewAssetWizardModal';
 import { AssignModal } from '@/components/AssignModal';
 import { ReturnChecklistModal } from '@/components/ReturnChecklistModal';
 import { BarcodeScannerModal } from '@/components/BarcodeScannerModal';
+import { StickerSheetModal } from '@/components/StickerSheetModal';
 import { Asset, Branch, Department } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -24,6 +25,7 @@ interface AppContextType {
   openReturn: (asset: Asset) => void;
   openNewIntake: () => void;
   openScanner: () => void;
+  openStickerSheet: (customAssets?: Asset[]) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -64,6 +66,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isAssignOpen, setIsAssignOpen] = useState(false);
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isStickerOpen, setIsStickerOpen] = useState(false);
+  const [stickerAssets, setStickerAssets] = useState<Asset[]>([]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -126,6 +130,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsScannerOpen(true);
   };
 
+  const openStickerSheet = (customAssets?: Asset[]) => {
+    setStickerAssets(customAssets && customAssets.length > 0 ? customAssets : assets);
+    setIsStickerOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -168,6 +177,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openReturn,
         openNewIntake,
         openScanner,
+        openStickerSheet,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -264,6 +274,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onSelectAsset={(asset) => openDetail(asset)}
           onOpenAssign={(asset) => openAssign(asset)}
           onOpenReturn={(asset) => openReturn(asset)}
+        />
+
+        <StickerSheetModal
+          isOpen={isStickerOpen}
+          onClose={() => setIsStickerOpen(false)}
+          assets={stickerAssets.length > 0 ? stickerAssets : assets}
         />
 
       </div>
