@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
       status: body.status || 'DISPATCHED_TO_VENDOR',
       notes: body.notes || '',
       dispatchedBy: body.dispatchedBy || 'IT Asset Admin',
+      invoiceDoc: body.invoiceDoc || '',
     });
 
     return NextResponse.json({ success: true, data: newTicket }, { status: 201 });

@@ -11,6 +11,7 @@ import { BarcodeScannerModal } from '@/components/BarcodeScannerModal';
 import { StickerSheetModal } from '@/components/StickerSheetModal';
 import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
 import { NewRepairTicketModal } from '@/components/NewRepairTicketModal';
+import { AllInvoicesModal } from '@/components/AllInvoicesModal';
 import { Asset, Branch, Department, CurrentAssignment, RepairTicket } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -30,6 +31,7 @@ interface AppContextType {
   openStickerSheet: (customAssets?: Asset[]) => void;
   openHandoverVoucher: (asset: Asset, assignment?: CurrentAssignment) => void;
   openNewRepair: (asset?: Asset) => void;
+  openInvoices: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -77,6 +79,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [voucherAssignment, setVoucherAssignment] = useState<CurrentAssignment | null>(null);
   const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
   const [repairAsset, setRepairAsset] = useState<Asset | null>(null);
+  const [isInvoicesOpen, setIsInvoicesOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -155,6 +158,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsRepairModalOpen(true);
   };
 
+  const openInvoices = () => {
+    setIsInvoicesOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -201,6 +208,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openStickerSheet,
         openHandoverVoucher,
         openNewRepair,
+        openInvoices,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -224,6 +232,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           <TopNav
             onOpenNewAssetModal={openNewIntake}
             onOpenScanner={openScanner}
+            onOpenInvoices={openInvoices}
             onRefresh={loadData}
             isRefreshing={refreshing}
             searchQuery={searchQuery}
@@ -326,6 +335,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onClose={() => setIsVoucherOpen(false)}
           asset={voucherAsset}
           assignment={voucherAssignment}
+        />
+
+        <AllInvoicesModal
+          isOpen={isInvoicesOpen}
+          onClose={() => setIsInvoicesOpen(false)}
+          assets={assets}
         />
 
       </div>

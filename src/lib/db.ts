@@ -170,6 +170,7 @@ export async function returnAsset(
     damages?: string;
     notes?: string;
     performedBy?: string;
+    returnPhotos?: string[];
   }
 ): Promise<Asset | null> {
   const db = await readDatabase();
@@ -208,6 +209,7 @@ export async function returnAsset(
     conditionUponReturn: returnDetails.conditionUponReturn,
     damages: returnDetails.damages || '',
     notes: returnDetails.notes || 'Returned to IT Department inventory.',
+    returnPhotos: returnDetails.returnPhotos || [],
   };
 
   db.custodyHistory.unshift(returnHistory);

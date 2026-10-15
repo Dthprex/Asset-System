@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Asset, AssetCondition } from '@/types/asset';
 import { calculateDuration, formatDate } from '@/lib/utils';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 interface ReturnChecklistModalProps {
   asset: Asset | null;
@@ -50,6 +51,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
   const [conditionUponReturn, setConditionUponReturn] = useState<AssetCondition>('Used - Good');
   const [selectedDamageTags, setSelectedDamageTags] = useState<string[]>([]);
   const [damageNotes, setDamageNotes] = useState('');
+  const [returnPhotos, setReturnPhotos] = useState<string[]>([]);
   const [sanitizationNotes, setSanitizationNotes] = useState('Sanitized with isopropyl alcohol, data wiped, and verified functional.');
   const [performedBy, setPerformedBy] = useState('IT Asset Admin');
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +95,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
           damages: combinedDamages,
           notes: sanitizationNotes.trim(),
           performedBy,
+          returnPhotos,
         }),
       });
 
@@ -236,6 +239,19 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
                 className="w-full mt-2 px-3.5 py-2.5 rounded-xl bg-white border border-[#c28551]/30 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 placeholder-slate-400"
               />
             </div>
+          </div>
+
+          {/* Return Condition Photo Proof */}
+          <div className="pt-1">
+            <MediaUploadField
+              label="Return Condition Photos & Evidence"
+              sublabel="Upload photo evidence of item condition upon return (clean, minor scuffs, or damaged area)"
+              multiple={true}
+              accept="image/*"
+              values={returnPhotos}
+              onChange={setReturnPhotos}
+              maxFiles={6}
+            />
           </div>
 
           <div>

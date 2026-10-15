@@ -101,7 +101,7 @@
       "purchaseLocation": "Future World Colombo 03",
       "purchaseAmount": 685000,
       "currency": "LKR",
-      "invoiceDoc": "/uploads/sample-invoice-macbook.png",
+      "invoiceDoc": "/uploads/sample-invoice-macbook.svg",
       "images": [
         "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80"
       ],
@@ -509,7 +509,10 @@
       "duration": "",
       "conditionUponReturn": "Damaged",
       "damages": "Tea spill over keyboard area. Spacebar, Enter key sticky and non-responsive. Trackpad cursor jumps intermittently.",
-      "notes": "Device powered off immediately. Sent to Softlogic Authorized Service Center under ticket #SRV-99812."
+      "notes": "Device powered off immediately. Sent to Softlogic Authorized Service Center under ticket #SRV-99812.",
+      "returnPhotos": [
+        "https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=800&auto=format&fit=crop&q=80"
+      ]
     }
   ],
   "repairTickets": [
@@ -530,6 +533,7 @@
       "expectedReturnDate": "2026-10-22",
       "status": "AWAITING_PARTS",
       "notes": "Handed over on 2026-10-05. Motherboard ultrasonic cleaning passed. Awaiting replacement original backlit keyboard assembly from Lenovo Singapore.",
+      "invoiceDoc": "/uploads/sample-repair-bill-softlogic.svg",
       "dispatchedBy": "IT Asset Admin"
     }
   ],

@@ -5,12 +5,14 @@ import {
   Search, 
   Plus, 
   RefreshCw,
-  Scan
+  Scan,
+  Receipt
 } from 'lucide-react';
 
 interface TopNavProps {
   onOpenNewAssetModal: () => void;
   onOpenScanner?: () => void;
+  onOpenInvoices?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   searchQuery?: string;
@@ -21,6 +23,7 @@ interface TopNavProps {
 export const TopNav: React.FC<TopNavProps> = ({
   onOpenNewAssetModal,
   onOpenScanner,
+  onOpenInvoices,
   onRefresh,
   isRefreshing = false,
   searchQuery = '',
@@ -105,6 +108,18 @@ export const TopNav: React.FC<TopNavProps> = ({
             <kbd className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-medium text-slate-400 bg-slate-100 border border-slate-200">
               ⌘B
             </kbd>
+          </button>
+        )}
+
+        {/* Central Invoices & Receipts Vault */}
+        {onOpenInvoices && (
+          <button
+            onClick={onOpenInvoices}
+            title="Fleet Invoices, Vendor Repair Bills & Return Evidence"
+            className="px-3.5 py-2.5 rounded-xl border border-[#c28551]/30 bg-white hover:bg-[#fbf5ef] text-slate-700 hover:text-[#c28551] text-xs font-semibold shadow-2xs transition flex items-center gap-2 cursor-pointer btn-press-sm"
+          >
+            <Receipt className="w-4 h-4 text-[#c28551]" />
+            <span className="hidden sm:inline">Invoices & Bills</span>
           </button>
         )}
 

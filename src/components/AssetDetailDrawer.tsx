@@ -19,10 +19,17 @@ import {
   Wrench,
   CalendarCheck,
   Zap,
-  BatteryCharging
+  BatteryCharging,
+  Receipt,
+  Camera,
+  Eye,
+  Download,
+  ExternalLink,
+  Image as ImageIcon,
+  Maximize2
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Asset, CustodyRecord, MaintenanceRecord } from '@/types/asset';
+import { Asset, CustodyRecord, MaintenanceRecord, RepairTicket } from '@/types/asset';
 import { formatLKR, formatDate, getWarrantyInfo, calculateDuration } from '@/lib/utils';
 
 interface AssetDetailDrawerProps {
@@ -46,14 +53,17 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
+  const [repairTickets, setRepairTickets] = useState<RepairTicket[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [activeTab, setActiveTab] = useState<'timeline' | 'specs' | 'qr' | 'maintenance'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'specs' | 'invoices' | 'qr' | 'maintenance'>('timeline');
   const [copiedTag, setCopiedTag] = useState(false);
+  const [lightboxDoc, setLightboxDoc] = useState<{ url: string; title: string; subtitle?: string; isPdf?: boolean } | null>(null);
 
   useEffect(() => {
     if (asset && isOpen) {
       fetchHistory(asset.id);
       fetchMaintenance(asset.id);
+      fetchRepairs(asset.id);
     }
   }, [asset, isOpen]);
 
@@ -81,6 +91,18 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
       }
     } catch (err) {
       console.error('Failed to load maintenance records:', err);
+    }
+  };
+
+  const fetchRepairs = async (assetId: string) => {
+    try {
+      const res = await fetch(`/api/repairs?assetId=${assetId}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setRepairTickets(data.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to load repair tickets:', err);
     }
   };
 
@@ -170,24 +192,39 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               onClick={() => setActiveTab('specs')}
               className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
                 activeTab === 'specs'
-                  ? 'border-[#c28551] text-[#c28551]'
+                  ? 'border-[#c28551] text-[#c28551] font-bold'
                   : 'border-transparent text-slate-500 hover:text-[#1d2939]'
               }`}
             >
               <FileText className="w-4 h-4" />
-              <span>Hardware & Procurement</span>
+              <span>Specs & Hardware</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('invoices')}
+              className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
+                activeTab === 'invoices'
+                  ? 'border-[#c28551] text-[#c28551] font-bold'
+                  : 'border-transparent text-slate-500 hover:text-[#1d2939]'
+              }`}
+            >
+              <Receipt className="w-4 h-4" />
+              <span>Invoices & Media</span>
+              {(Boolean(asset.invoiceDoc) || repairTickets.some(r => r.invoiceDoc)) && (
+                <span className="w-2 h-2 rounded-full bg-[#c28551]"></span>
+              )}
             </button>
 
             <button
               onClick={() => setActiveTab('qr')}
               className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
                 activeTab === 'qr'
-                  ? 'border-[#c28551] text-[#c28551]'
+                  ? 'border-[#c28551] text-[#c28551] font-bold'
                   : 'border-transparent text-slate-500 hover:text-[#1d2939]'
               }`}
             >
               <QrIcon className="w-4 h-4" />
-              <span>QR Hardware Label</span>
+              <span>QR Label</span>
             </button>
 
             <button
@@ -199,7 +236,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               }`}
             >
               <CalendarCheck className="w-4 h-4" />
-              <span>Health & 6-Mo Checks ({maintenanceList.length})</span>
+              <span>6-Mo Checks ({maintenanceList.length})</span>
             </button>
           </div>
 
@@ -306,6 +343,35 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                                 </div>
                               )}
 
+                              {/* Return Condition Photo Proof Gallery */}
+                              {record.returnPhotos && record.returnPhotos.length > 0 && (
+                                <div className="mt-2.5 pt-2.5 border-t border-slate-200/80">
+                                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                                    <Camera className="w-3.5 h-3.5 text-[#c28551]" />
+                                    <span>Return Condition Evidence Photos ({record.returnPhotos.length})</span>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-2">
+                                    {record.returnPhotos.map((photo, pIdx) => (
+                                      <button
+                                        key={pIdx}
+                                        type="button"
+                                        onClick={() => setLightboxDoc({
+                                          url: photo,
+                                          title: `Return Condition Proof #${pIdx + 1}`,
+                                          subtitle: `Returned from ${record.previousHolder} on ${formatDate(record.date)}`
+                                        })}
+                                        className="group relative aspect-video rounded-lg overflow-hidden bg-slate-100 border border-slate-200 hover:border-[#c28551] transition cursor-pointer"
+                                      >
+                                        <img src={photo} alt={`Condition ${pIdx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                                        <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                                          <Eye className="w-3.5 h-3.5" />
+                                        </div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
                               {record.notes && (
                                 <p className="italic text-slate-500 mt-1">"{record.notes}"</p>
                               )}
@@ -398,7 +464,251 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               </div>
             )}
 
-            {/* TAB 3: QR LABEL */}
+            {/* TAB: INVOICES, BILLS & CONDITION EVIDENCE */}
+            {activeTab === 'invoices' && (
+              <div className="space-y-6 text-xs">
+                
+                {/* 1. Official Purchase Tax Invoice */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-bold text-[#1d2939] uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                      <Receipt className="w-4 h-4 text-[#c28551]" />
+                      <span>Official Purchase Invoice</span>
+                    </h4>
+                    <span className="font-bold text-[#c28551] text-xs font-mono">{formatLKR(asset.purchaseAmount)}</span>
+                  </div>
+
+                  {asset.invoiceDoc ? (
+                    <div className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] hover:border-[#c28551]/60 transition group space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-[#f0e6de] flex items-center justify-center shrink-0 shadow-2xs">
+                            {asset.invoiceDoc.toLowerCase().endsWith('.pdf') ? (
+                              <FileText className="w-6 h-6 text-rose-500" />
+                            ) : (
+                              <img src={asset.invoiceDoc} alt="Invoice" className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 text-xs">Procurement Tax Invoice</div>
+                            <div className="text-[11px] text-slate-500 mt-0.5">
+                              {asset.purchaseLocation} • Purchased on {formatDate(asset.purchaseDate)}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setLightboxDoc({
+                              url: asset.invoiceDoc!,
+                              title: `Purchase Invoice: ${asset.name} (${asset.assetTag})`,
+                              subtitle: `Vendor: ${asset.purchaseLocation} • Amount: ${formatLKR(asset.purchaseAmount)}`,
+                              isPdf: asset.invoiceDoc!.toLowerCase().endsWith('.pdf')
+                            })}
+                            className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#fbf5ef] border border-[#f0e6de] hover:border-[#c28551]/40 text-[#c28551] font-semibold text-[11px] flex items-center gap-1 transition cursor-pointer btn-press-sm"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview</span>
+                          </button>
+                          <a
+                            href={asset.invoiceDoc}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-xl bg-white hover:bg-[#faf7f3] border border-[#f0e6de] text-slate-500 hover:text-slate-800 transition cursor-pointer"
+                            title="Open / Download"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                      </div>
+
+                      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-white border border-[#f0e6de] relative group/prev">
+                        <img
+                          src={asset.invoiceDoc}
+                          alt="Invoice Preview"
+                          className="w-full h-full object-contain p-2 group-hover/prev:scale-[1.02] transition"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setLightboxDoc({
+                            url: asset.invoiceDoc!,
+                            title: `Purchase Invoice: ${asset.name} (${asset.assetTag})`,
+                            subtitle: `Vendor: ${asset.purchaseLocation} • Amount: ${formatLKR(asset.purchaseAmount)}`,
+                            isPdf: asset.invoiceDoc!.toLowerCase().endsWith('.pdf')
+                          })}
+                          className="absolute inset-0 bg-black/20 opacity-0 group-hover/prev:opacity-100 flex items-center justify-center transition text-white font-semibold gap-1.5 cursor-pointer backdrop-blur-2xs"
+                        >
+                          <Maximize2 className="w-4 h-4" />
+                          <span>Expand Full Document</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-200 text-slate-500 text-center space-y-1">
+                      <p className="font-semibold text-slate-700">No purchase invoice document attached</p>
+                      <p className="text-[11px] text-slate-400">Intake was logged without an attached receipt file.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Purchased Hardware Intake Photos */}
+                <div>
+                  <h4 className="font-bold text-[#1d2939] uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+                    <ImageIcon className="w-4 h-4 text-[#c28551]" />
+                    <span>Intake Hardware Photos ({asset.images.length})</span>
+                  </h4>
+
+                  {asset.images.length > 0 ? (
+                    <div className="grid grid-cols-3 gap-2.5">
+                      {asset.images.map((img, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLightboxDoc({
+                            url: img,
+                            title: `${asset.name} — Hardware Intake Photo #${idx + 1}`,
+                            subtitle: `Asset Tag: ${asset.assetTag} • S/N: ${asset.serialNumber}`
+                          })}
+                          className="group relative aspect-video rounded-xl overflow-hidden bg-slate-100 border border-[#f0e6de] hover:border-[#c28551] transition cursor-pointer shadow-2xs"
+                        >
+                          <img src={img} alt={`${asset.name} photo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                          <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                            <Eye className="w-4 h-4" />
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-center py-3 bg-slate-50 rounded-xl border border-dashed">No intake photos available</p>
+                  )}
+                </div>
+
+                {/* 3. Vendor Repair Bills & RMA Invoices */}
+                <div>
+                  <h4 className="font-bold text-[#1d2939] uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+                    <Wrench className="w-4 h-4 text-[#c28551]" />
+                    <span>Vendor Repair Bills & RMA Job Sheets ({repairTickets.length})</span>
+                  </h4>
+
+                  {repairTickets.length === 0 ? (
+                    <div className="p-4 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400">
+                      No repair service tickets logged for this asset.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {repairTickets.map((ticket) => (
+                        <div key={ticket.id} className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] space-y-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-slate-900">{ticket.rmaNumber}</span>
+                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-[#faece2] text-[#c28551]">
+                                  {ticket.vendorName}
+                                </span>
+                              </div>
+                              <p className="text-slate-600 mt-1">{ticket.issueDescription}</p>
+                              <div className="text-[11px] text-slate-400 mt-0.5">
+                                Dispatched {formatDate(ticket.dispatchedDate)} • Cost: <span className="font-bold text-slate-700">{formatLKR(ticket.actualCostLKR || ticket.estimatedCostLKR)}</span>
+                              </div>
+                            </div>
+
+                            {ticket.invoiceDoc && (
+                              <button
+                                type="button"
+                                onClick={() => setLightboxDoc({
+                                  url: ticket.invoiceDoc!,
+                                  title: `Repair Job Invoice: RMA #${ticket.rmaNumber}`,
+                                  subtitle: `Vendor: ${ticket.vendorName} • Bill: ${formatLKR(ticket.actualCostLKR || ticket.estimatedCostLKR)}`,
+                                  isPdf: ticket.invoiceDoc!.toLowerCase().endsWith('.pdf')
+                                })}
+                                className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#fbf5ef] border border-[#f0e6de] hover:border-[#c28551]/40 text-[#c28551] font-semibold text-[11px] flex items-center gap-1 transition cursor-pointer shrink-0 btn-press-sm"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                                <span>View Bill</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {ticket.invoiceDoc && (
+                            <div className="aspect-[16/9] rounded-xl overflow-hidden bg-white border border-[#f0e6de] relative group/rprev">
+                              <img src={ticket.invoiceDoc} alt="Repair Bill" className="w-full h-full object-contain p-2" />
+                              <button
+                                type="button"
+                                onClick={() => setLightboxDoc({
+                                  url: ticket.invoiceDoc!,
+                                  title: `Repair Job Invoice: RMA #${ticket.rmaNumber}`,
+                                  subtitle: `Vendor: ${ticket.vendorName} • Bill: ${formatLKR(ticket.actualCostLKR || ticket.estimatedCostLKR)}`,
+                                  isPdf: ticket.invoiceDoc!.toLowerCase().endsWith('.pdf')
+                                })}
+                                className="absolute inset-0 bg-black/20 opacity-0 group-hover/rprev:opacity-100 flex items-center justify-center transition text-white font-semibold gap-1.5 cursor-pointer backdrop-blur-2xs"
+                              >
+                                <Maximize2 className="w-4 h-4" />
+                                <span>Inspect Full Repair Bill</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 4. Custody Return Condition Photos */}
+                <div>
+                  <h4 className="font-bold text-[#1d2939] uppercase tracking-wider text-[11px] mb-2 flex items-center gap-1.5">
+                    <Camera className="w-4 h-4 text-[#c28551]" />
+                    <span>Return Condition Inspections & Damage Evidence</span>
+                  </h4>
+
+                  {history.filter(h => h.returnPhotos && h.returnPhotos.length > 0).length === 0 ? (
+                    <div className="p-4 text-center bg-slate-50 rounded-2xl border border-slate-200 text-slate-400">
+                      No condition photos logged during past returns for this hardware.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {history.filter(h => h.returnPhotos && h.returnPhotos.length > 0).map((record) => (
+                        <div key={record.id} className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] space-y-2">
+                          <div className="flex items-center justify-between text-[11px]">
+                            <span className="font-semibold text-slate-800">
+                              Returned by {record.previousHolder}
+                            </span>
+                            <span className="font-mono text-slate-500">{formatDate(record.date)}</span>
+                          </div>
+                          {record.damages && (
+                            <div className="p-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium">
+                              {record.damages}
+                            </div>
+                          )}
+                          <div className="grid grid-cols-3 gap-2">
+                            {record.returnPhotos!.map((photo, pIdx) => (
+                              <button
+                                key={pIdx}
+                                type="button"
+                                onClick={() => setLightboxDoc({
+                                  url: photo,
+                                  title: `Return Condition Proof #${pIdx + 1}`,
+                                  subtitle: `Returned from ${record.previousHolder} on ${formatDate(record.date)}`
+                                })}
+                                className="group relative aspect-video rounded-lg overflow-hidden bg-slate-100 border border-slate-200 hover:border-[#c28551] transition cursor-pointer"
+                              >
+                                <img src={photo} alt={`Return evidence ${pIdx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition text-white">
+                                  <Eye className="w-3.5 h-3.5" />
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
+
+            {/* TAB: QR LABEL */}
             {activeTab === 'qr' && (
               <div className="p-6 text-center space-y-6 bg-[#fdfbf9] rounded-2xl border border-[#f0e6de] flex flex-col items-center justify-center">
                 <div className="p-5 bg-white rounded-2xl shadow-sm border border-[#f0e6de]">
@@ -568,6 +878,52 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
 
         </div>
       </div>
+
+      {/* Lightbox Document & Photo Inspector */}
+      {lightboxDoc && (
+        <div className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex flex-col p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between text-white pb-3 border-b border-white/10 shrink-0">
+            <div>
+              <h3 className="font-bold text-sm sm:text-base text-white">{lightboxDoc.title}</h3>
+              {lightboxDoc.subtitle && <p className="text-xs text-white/60 mt-0.5">{lightboxDoc.subtitle}</p>}
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href={lightboxDoc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                title="Open in new window"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+              <button
+                onClick={() => setLightboxDoc(null)}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                title="Close Lightbox"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
+            {lightboxDoc.isPdf || lightboxDoc.url.toLowerCase().endsWith('.pdf') ? (
+              <iframe
+                src={lightboxDoc.url}
+                title={lightboxDoc.title}
+                className="w-full h-full rounded-2xl bg-white border border-white/20 shadow-2xl"
+              />
+            ) : (
+              <img
+                src={lightboxDoc.url}
+                alt={lightboxDoc.title}
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

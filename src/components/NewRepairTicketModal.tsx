@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Asset, RepairTicket } from '@/types/asset';
 import { formatLKR } from '@/lib/utils';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 interface NewRepairTicketModalProps {
   isOpen: boolean;
@@ -76,6 +77,7 @@ export const NewRepairTicketModal: React.FC<NewRepairTicketModalProps> = ({
   const [isCoveredByWarranty, setIsCoveredByWarranty] = useState(true);
   const [dispatchedDate, setDispatchedDate] = useState('');
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
+  const [invoiceDoc, setInvoiceDoc] = useState('');
   const [notes, setNotes] = useState('');
   const [dispatchedBy, setDispatchedBy] = useState('IT Asset Admin');
   const [submitting, setSubmitting] = useState(false);
@@ -169,6 +171,7 @@ export const NewRepairTicketModal: React.FC<NewRepairTicketModalProps> = ({
           expectedReturnDate,
           status: 'DISPATCHED_TO_VENDOR',
           notes,
+          invoiceDoc: invoiceDoc || undefined,
           dispatchedBy,
         }),
       });
@@ -445,6 +448,19 @@ export const NewRepairTicketModal: React.FC<NewRepairTicketModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Vendor Service Bill / Intake Job Sheet */}
+          <MediaUploadField
+            label="Vendor Job Sheet / Intake Invoice Bill"
+            sublabel="Upload authorized vendor receipt or intake job sheet document (PDF or image)"
+            multiple={false}
+            accept="image/*,application/pdf"
+            values={invoiceDoc ? [invoiceDoc] : []}
+            onChange={(urls) => setInvoiceDoc(urls[0] || '')}
+            samplePresets={[
+              { name: 'Softlogic Service Job Sheet', url: '/uploads/sample-repair-bill-softlogic.svg' }
+            ]}
+          />
 
           {/* Notes */}
           <div>

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { RepairTicket, RepairTicketStatus } from '@/types/asset';
 import { formatLKR, formatDate } from '@/lib/utils';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 interface UpdateRepairTicketModalProps {
   ticket: RepairTicket | null;
@@ -60,6 +61,7 @@ export const UpdateRepairTicketModal: React.FC<UpdateRepairTicketModalProps> = (
   const [status, setStatus] = useState<RepairTicketStatus>(ticket?.status || 'DISPATCHED_TO_VENDOR');
   const [actualCostLKR, setActualCostLKR] = useState<number | ''>(ticket?.actualCostLKR || 0);
   const [notes, setNotes] = useState(ticket?.notes || '');
+  const [invoiceDoc, setInvoiceDoc] = useState<string>(ticket?.invoiceDoc || '');
   const [completedDate, setCompletedDate] = useState(
     ticket?.completedDate || new Date().toISOString().slice(0, 10)
   );
@@ -81,6 +83,7 @@ export const UpdateRepairTicketModal: React.FC<UpdateRepairTicketModalProps> = (
           status,
           actualCostLKR: Number(actualCostLKR) || 0,
           notes,
+          invoiceDoc: invoiceDoc || undefined,
           completedDate: status === 'RETURNED_TO_FLEET' || status === 'REPAIR_COMPLETED' ? completedDate : undefined,
         }),
       });
@@ -234,6 +237,19 @@ export const UpdateRepairTicketModal: React.FC<UpdateRepairTicketModalProps> = (
               </div>
             )}
           </div>
+
+          {/* Vendor Repair Invoice / Receipt Document */}
+          <MediaUploadField
+            label="Vendor Service Bill / Tax Invoice Document"
+            sublabel="Upload authorized vendor repair receipt, parts invoice, or job sheet bill (PDF or image)"
+            multiple={false}
+            accept="image/*,application/pdf"
+            values={invoiceDoc ? [invoiceDoc] : []}
+            onChange={(urls) => setInvoiceDoc(urls[0] || '')}
+            samplePresets={[
+              { name: 'Softlogic Service Bill', url: '/uploads/sample-repair-bill-softlogic.svg' }
+            ]}
+          />
 
           {/* Notes */}
           <div>

@@ -71,6 +71,7 @@ export interface CustodyRecord {
   conditionUponReturn?: string;
   damages?: string;
   notes?: string;
+  returnPhotos?: string[];
 }
 
 export interface Asset {
@@ -135,6 +136,7 @@ export interface RepairTicket {
   completedDate?: string;
   status: RepairTicketStatus;
   notes?: string;
+  invoiceDoc?: string;
   dispatchedBy: string;
 }
 

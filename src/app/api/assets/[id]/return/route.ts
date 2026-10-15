@@ -14,6 +14,7 @@ export async function POST(
     const damages = body.damages || '';
     const notes = body.notes || '';
     const performedBy = body.performedBy || 'IT Asset Admin';
+    const returnPhotos = Array.isArray(body.returnPhotos) ? body.returnPhotos : [];
 
     const updated = await returnAsset(id, {
       returnDate,
@@ -21,6 +22,7 @@ export async function POST(
       damages,
       notes,
       performedBy,
+      returnPhotos,
     });
 
     if (!updated) {

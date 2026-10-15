@@ -1,0 +1,74 @@
+<svg width="800" height="1100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="1100" fill="#ffffff" />
+  <rect x="0" y="0" width="800" height="12" fill="#c28551" />
+  
+  <!-- Header -->
+  <text x="50" y="60" font-family="system-ui, sans-serif" font-size="24" font-weight="bold" fill="#1d2939">FUTURE WORLD (PVT) LTD</text>
+  <text x="50" y="85" font-family="system-ui, sans-serif" font-size="12" fill="#667085">Apple Authorized Reseller &amp; Service Provider</text>
+  <text x="50" y="105" font-family="system-ui, sans-serif" font-size="12" fill="#667085">Ananda Coomaraswamy Mawatha, Colombo 03 • Tel: 011 257 6666</text>
+  <text x="50" y="125" font-family="system-ui, sans-serif" font-size="12" fill="#667085">VAT Reg: 104899201-7000 • SVAT: 009214</text>
+
+  <rect x="540" y="45" width="210" height="90" rx="8" fill="#fbf5ef" stroke="#ead7c7" />
+  <text x="560" y="75" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#c28551">TAX INVOICE</text>
+  <text x="560" y="98" font-family="monospace" font-size="12" fill="#1d2939">INV-FW-2025-0842</text>
+  <text x="560" y="120" font-family="system-ui, sans-serif" font-size="11" fill="#667085">Date: 10 Mar 2025</text>
+
+  <!-- Divider -->
+  <line x1="50" y1="160" x2="750" y2="160" stroke="#e4e7ec" stroke-width="1.5" />
+
+  <!-- Bill To -->
+  <text x="50" y="195" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#98a2b3" letter-spacing="1">BILLED TO (CUSTOMER):</text>
+  <text x="50" y="220" font-family="system-ui, sans-serif" font-size="15" font-weight="bold" fill="#1d2939">COSMETICS.LK (PVT) LTD</text>
+  <text x="50" y="240" font-family="system-ui, sans-serif" font-size="12" fill="#475467">Head Office: No. 42, Nawala Road, Nawala, Sri Lanka</text>
+  <text x="50" y="260" font-family="system-ui, sans-serif" font-size="12" fill="#475467">Attn: IT Infrastructure &amp; Procurement Division</text>
+  <text x="50" y="280" font-family="system-ui, sans-serif" font-size="12" fill="#475467">PO Reference: PO-CLK-2025-019 • Asset: CLK-IT-2025-001</text>
+
+  <!-- Items Table Header -->
+  <rect x="50" y="320" width="700" height="35" rx="6" fill="#1d2939" />
+  <text x="70" y="343" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">#</text>
+  <text x="110" y="343" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">HARDWARE DESCRIPTION &amp; SERIAL NUMBER</text>
+  <text x="500" y="343" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">QTY</text>
+  <text x="560" y="343" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">UNIT PRICE</text>
+  <text x="660" y="343" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#ffffff">AMOUNT (LKR)</text>
+
+  <!-- Row 1 -->
+  <rect x="50" y="365" width="700" height="75" fill="#fcfcfd" stroke="#f2f4f7" />
+  <text x="70" y="395" font-family="system-ui, sans-serif" font-size="12" font-weight="bold" fill="#1d2939">01</text>
+  <text x="110" y="395" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#1d2939">MacBook Pro 14&quot; (Space Gray) - Apple M2 Pro</text>
+  <text x="110" y="415" font-family="monospace" font-size="11" fill="#475467">Model: MPHE3LL/A • SN: C02GN0AAQ6L4 • Specs: 16GB, 512GB SSD</text>
+  <text x="110" y="432" font-family="system-ui, sans-serif" font-size="11" fill="#c28551">Official Apple Sri Lanka 2-Year Limited Commercial Warranty Included</text>
+  <text x="510" y="395" font-family="system-ui, sans-serif" font-size="12" fill="#1d2939">1</text>
+  <text x="560" y="395" font-family="monospace" font-size="12" fill="#1d2939">685,000</text>
+  <text x="660" y="395" font-family="monospace" font-size="12" font-weight="bold" fill="#1d2939">685,000</text>
+
+  <!-- Summary Box -->
+  <line x1="450" y1="470" x2="750" y2="470" stroke="#e4e7ec" stroke-width="1" />
+  <text x="470" y="500" font-family="system-ui, sans-serif" font-size="12" fill="#475467">Subtotal Net:</text>
+  <text x="660" y="500" font-family="monospace" font-size="12" fill="#1d2939">685,000</text>
+
+  <text x="470" y="525" font-family="system-ui, sans-serif" font-size="12" fill="#475467">VAT (0% SVAT Scheme):</text>
+  <text x="660" y="525" font-family="monospace" font-size="12" fill="#1d2939">0</text>
+
+  <rect x="450" y="545" width="300" height="45" rx="6" fill="#fbf5ef" stroke="#ead7c7" />
+  <text x="470" y="573" font-family="system-ui, sans-serif" font-size="13" font-weight="bold" fill="#1d2939">TOTAL PAYABLE (LKR):</text>
+  <text x="640" y="573" font-family="monospace" font-size="15" font-weight="bold" fill="#c28551">Rs. 685,000</text>
+
+  <!-- Payment Status Stamp -->
+  <g transform="translate(100, 520) rotate(-10)">
+    <rect width="180" height="50" rx="8" fill="none" stroke="#12b76a" stroke-width="3" stroke-dasharray="6,4" />
+    <text x="90" y="32" font-family="system-ui, sans-serif" font-size="18" font-weight="bold" fill="#12b76a" text-anchor="middle">PAID IN FULL</text>
+  </g>
+
+  <!-- Signatures -->
+  <line x1="80" y1="720" x2="280" y2="720" stroke="#98a2b3" stroke-width="1.5" stroke-dasharray="4,4" />
+  <text x="80" y="740" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#475467">AUTHORIZED STORE SIGNATURE</text>
+  <text x="80" y="755" font-family="system-ui, sans-serif" font-size="10" fill="#98a2b3">Future World Colombo Flagship Cashier</text>
+
+  <line x1="480" y1="720" x2="680" y2="720" stroke="#98a2b3" stroke-width="1.5" stroke-dasharray="4,4" />
+  <text x="480" y="740" font-family="system-ui, sans-serif" font-size="11" font-weight="bold" fill="#475467">RECEIVED IN GOOD ORDER</text>
+  <text x="480" y="755" font-family="system-ui, sans-serif" font-size="10" fill="#98a2b3">cosmetics.lk IT Procurement Officer</text>
+
+  <!-- Footer Notice -->
+  <rect x="0" y="820" width="800" height="40" fill="#f8fafc" />
+  <text x="400" y="845" font-family="system-ui, sans-serif" font-size="10" fill="#98a2b3" text-anchor="middle">This is a verified digital procurement receipt for cosmetics.lk asset custody compliance. Serial and Apple warranty verified.</text>
+</svg>

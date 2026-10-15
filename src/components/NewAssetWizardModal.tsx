@@ -13,6 +13,7 @@ import {
 import { Asset, AssetCategory, AssetCondition, Branch, Department } from '@/types/asset';
 import { formatLKR } from '@/lib/utils';
 import { CATEGORIES } from './AssetFilters';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 interface NewAssetWizardModalProps {
   isOpen: boolean;
@@ -74,6 +75,10 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
   const [purchaseLocation, setPurchaseLocation] = useState('Future World Colombo 03');
   const [purchaseAmount, setPurchaseAmount] = useState<number | ''>(150000);
   const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80');
+  const [images, setImages] = useState<string[]>([
+    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80'
+  ]);
+  const [invoiceDoc, setInvoiceDoc] = useState<string>('/uploads/sample-invoice-macbook.svg');
 
   // Deployment
   const [assignImmediately, setAssignImmediately] = useState(false);
@@ -129,7 +134,8 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
         warrantyEndDate,
         purchaseLocation: purchaseLocation || 'Colombo Vendor',
         purchaseAmount: Number(purchaseAmount),
-        images: [imageUrl],
+        images: images.length > 0 ? images : [imageUrl],
+        invoiceDoc: invoiceDoc || '',
       };
 
       if (assignImmediately) {
@@ -441,16 +447,32 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                 ))}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Device Photo URL
-                </label>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#f0e6de] text-[#1d2939] text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+              {/* Media & Invoices Upload Dropzones */}
+              <div className="pt-2 border-t border-[#f0e6de] space-y-4">
+                <MediaUploadField
+                  label="Purchased Item Photos"
+                  sublabel="Upload photos of the purchased hardware (unboxed item, serial barcode sticker, ports)"
+                  multiple={true}
+                  accept="image/*"
+                  values={images}
+                  onChange={setImages}
+                  maxFiles={6}
+                  samplePresets={[
+                    { name: 'MacBook M2 Photos', url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80' },
+                    { name: 'Sony Camera Photos', url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=800&auto=format&fit=crop&q=80' }
+                  ]}
+                />
+
+                <MediaUploadField
+                  label="Official Purchase Invoice / Bill Document"
+                  sublabel="Upload vendor tax invoice, delivery bill, or store purchase receipt (PNG, JPG, or PDF)"
+                  multiple={false}
+                  accept="image/*,application/pdf"
+                  values={invoiceDoc ? [invoiceDoc] : []}
+                  onChange={(urls) => setInvoiceDoc(urls[0] || '')}
+                  samplePresets={[
+                    { name: 'Future World Tax Invoice (Sample)', url: '/uploads/sample-invoice-macbook.svg' }
+                  ]}
                 />
               </div>
             </div>
