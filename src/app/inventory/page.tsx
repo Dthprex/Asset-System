@@ -285,9 +285,13 @@ function InventoryContent() {
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${warranty.badgeClass}`}>
-                        {warranty.statusText}
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${warranty.badgeClass}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${warranty.dotClass}`} />
+                        <span>{warranty.statusText}</span>
                       </span>
+                      <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
+                        {formatDate(asset.warrantyEndDate)}
+                      </div>
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap text-right">

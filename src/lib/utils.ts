@@ -94,13 +94,15 @@ export function getWarrantyInfo(warrantyEndDate: string, referenceDate?: Date): 
   isExpired: boolean;
   statusText: string;
   badgeClass: string;
+  dotClass: string;
 } {
   if (!warrantyEndDate) {
     return {
       daysLeft: 0,
       isExpired: true,
       statusText: 'No Warranty Date',
-      badgeClass: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+      badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200',
+      dotClass: 'bg-slate-400',
     };
   }
 
@@ -118,21 +120,24 @@ export function getWarrantyInfo(warrantyEndDate: string, referenceDate?: Date): 
       daysLeft: diffDays,
       isExpired: true,
       statusText: `Expired (${Math.abs(diffDays)}d ago)`,
-      badgeClass: 'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-900',
+      badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/90',
+      dotClass: 'bg-rose-500',
     };
   } else if (diffDays <= 30) {
     return {
       daysLeft: diffDays,
       isExpired: false,
       statusText: `Expiring Soon (${diffDays}d left)`,
-      badgeClass: 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-400 border border-amber-200 dark:border-amber-900',
+      badgeClass: 'bg-amber-50 text-amber-900 border border-amber-200/90',
+      dotClass: 'bg-amber-500',
     };
   } else {
     return {
       daysLeft: diffDays,
       isExpired: false,
       statusText: `Active (${Math.floor(diffDays / 30)}m left)`,
-      badgeClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900',
+      badgeClass: 'bg-emerald-50 text-emerald-800 border border-emerald-200/90',
+      dotClass: 'bg-emerald-500',
     };
   }
 }

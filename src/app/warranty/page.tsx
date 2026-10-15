@@ -139,8 +139,9 @@ function WarrantyContent() {
                 <span className="font-mono text-[10px] font-bold text-[#c28551] bg-[#fbf5ef] px-2 py-0.5 rounded border border-[#c28551]/20">
                   {asset.assetTag}
                 </span>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${asset.warrantyInfo.badgeClass}`}>
-                  {asset.warrantyInfo.statusText}
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${asset.warrantyInfo.badgeClass}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${asset.warrantyInfo.dotClass}`} />
+                  <span>{asset.warrantyInfo.statusText}</span>
                 </span>
               </div>
 
