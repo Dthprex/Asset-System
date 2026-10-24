@@ -40,6 +40,7 @@ interface AssetDetailDrawerProps {
   onReturn: (asset: Asset) => void;
   onOpenVoucher?: (asset: Asset) => void;
   onDispatchRepair?: (asset: Asset) => void;
+  onOpenStickerSheet?: (asset: Asset) => void;
 }
 
 export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
@@ -50,6 +51,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onReturn,
   onOpenVoucher,
   onDispatchRepair,
+  onOpenStickerSheet,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
@@ -726,13 +728,25 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                   <p className="text-[11px] font-semibold text-[#c28551]">cosmetics.lk IT Infrastructure</p>
                 </div>
 
-                <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2 rounded-xl bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
-                >
-                  <Printer className="w-4 h-4 text-[#dfae85]" />
-                  <span>Print Physical QR Sticker</span>
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 w-full justify-center">
+                  <button
+                    onClick={() => window.print()}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-[#1d2939] hover:bg-[#c28551] text-white text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-sm active:scale-95"
+                  >
+                    <Printer className="w-4 h-4 text-[#dfae85]" />
+                    <span>Print Physical QR Sticker</span>
+                  </button>
+
+                  {onOpenStickerSheet && (
+                    <button
+                      onClick={() => onOpenStickerSheet(asset)}
+                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#f0e6de] bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center justify-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <QrIcon className="w-4 h-4 text-[#c28551]" />
+                      <span>Print on Sticker Sheet</span>
+                    </button>
+                  )}
+                </div>
               </div>
             )}
 
@@ -920,6 +934,74 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
               />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* DEDICATED PRINT CONTAINER FOR SINGLE ASSET QR STICKER */}
+      {asset && (
+        <div className="hidden print:block print-area">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
+            <div 
+              style={{
+                width: '360px',
+                border: '2px solid #000',
+                borderRadius: '10px',
+                padding: '14px',
+                background: '#fff',
+                color: '#000',
+                boxSizing: 'border-box',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #000', paddingBottom: '6px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '900', letterSpacing: '0.08em', color: '#000' }}>
+                  COSMETICS.LK
+                </span>
+                <span style={{ fontSize: '9px', fontWeight: '800', color: '#333', letterSpacing: '0.05em' }}>
+                  IT FLEET ASSET
+                </span>
+              </div>
+
+              {/* Body */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div style={{ border: '1.5px solid #000', borderRadius: '6px', padding: '4px', background: '#fff', flexShrink: 0 }}>
+                  <QRCodeSVG
+                    value={`https://inventory.cosmetics.lk/assets/${asset.assetTag}`}
+                    size={110}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: '17px', fontWeight: '900', color: '#000', letterSpacing: '0.03em', lineHeight: '1.2' }}>
+                    {asset.assetTag}
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: '700', color: '#111', marginTop: '3px', lineHeight: '1.2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {asset.name}
+                  </div>
+                  <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#333', marginTop: '3px' }}>
+                    SN: {asset.serialNumber}
+                  </div>
+                  {asset.hasSim && asset.imei1 && (
+                    <div style={{ fontSize: '9px', fontFamily: 'monospace', color: '#444', marginTop: '2px' }}>
+                      IMEI: {asset.imei1}
+                    </div>
+                  )}
+                  <div style={{ fontSize: '10px', fontWeight: '600', color: '#555', marginTop: '3px' }}>
+                    {asset.currentAssignment?.locationOrBranch || 'Central IT Lab'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div style={{ marginTop: '10px', paddingTop: '6px', borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', fontSize: '8.5px', color: '#444' }}>
+                <span>Scan QR for Custody & Specs</span>
+                <span>Helpline: 011 234 5678</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

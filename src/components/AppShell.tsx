@@ -291,6 +291,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onReturn={openReturn}
           onOpenVoucher={(asset) => openHandoverVoucher(asset)}
           onDispatchRepair={(asset) => openNewRepair(asset)}
+          onOpenStickerSheet={(asset) => openStickerSheet([asset])}
         />
 
         <NewRepairTicketModal
