@@ -224,6 +224,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           activeLoanCount={stats.borrowedCount}
           expiringWarrantyCount={stats.expiringWarrantyCount}
           totalAssetsCount={stats.totalAssets}
+          branches={branches}
         />
 
         {/* Main Workspace */}

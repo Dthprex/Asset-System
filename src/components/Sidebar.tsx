@@ -15,6 +15,7 @@ import {
   CalendarCheck,
   Activity
 } from 'lucide-react';
+import { Branch } from '@/types/asset';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -22,6 +23,7 @@ interface SidebarProps {
   activeLoanCount?: number;
   expiringWarrantyCount?: number;
   totalAssetsCount?: number;
+  branches?: Branch[];
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -30,6 +32,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeLoanCount = 0,
   expiringWarrantyCount = 0,
   totalAssetsCount = 0,
+  branches = [],
 }) => {
   const pathname = usePathname();
 
@@ -175,7 +178,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-[#1d2939] leading-snug font-medium">
-              Head Office Nawala • 8 Showrooms synced
+              {(() => {
+                if (branches.length === 0) return 'No branches synced';
+                const hasHq = branches.some(b => b.type === 'Head Office' || b.name.includes('HQ') || b.name.includes('Head Office'));
+                const nonHq = branches.filter(b => b.type !== 'Head Office' && !b.name.includes('HQ') && !b.name.includes('Head Office')).length;
+                if (hasHq && nonHq > 0) {
+                  return `Head Office Nawala • ${nonHq} ${nonHq === 1 ? 'Showroom' : 'Showrooms'} synced`;
+                }
+                return `${branches.length} ${branches.length === 1 ? 'Location' : 'Locations'} synced`;
+              })()}
             </p>
           </div>
         ) : (
