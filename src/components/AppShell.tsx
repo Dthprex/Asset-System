@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import Link from 'next/link';
 import { Sidebar } from '@/components/Sidebar';
 import { TopNav } from '@/components/TopNav';
 import { AssetDetailDrawer } from '@/components/AssetDetailDrawer';
@@ -259,8 +260,22 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
               <span className="font-bold text-[#c28551]">cosmetics.lk</span>
               <span>• IT Infrastructure & Fleet Custody Portal</span>
             </div>
-            <div className="text-[11px] text-slate-400">
-              Colombo Flagship • Kandy City Centre • Nawala HQ • OGF • Negombo • Kelaniya Warehouse
+            <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-400">
+              {branches.length > 0 ? (
+                branches.map((b, idx) => (
+                  <React.Fragment key={b.id}>
+                    <Link
+                      href={`/branches?branch=${encodeURIComponent(b.id)}`}
+                      className="hover:text-[#c28551] hover:underline underline-offset-2 transition-colors text-slate-500 font-medium"
+                    >
+                      {b.name}
+                    </Link>
+                    {idx < branches.length - 1 && <span className="text-slate-300">•</span>}
+                  </React.Fragment>
+                ))
+              ) : (
+                <span className="text-slate-400 italic">No active locations configured</span>
+              )}
             </div>
           </footer>
 

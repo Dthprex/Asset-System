@@ -42,6 +42,9 @@ export const AssignModal: React.FC<AssignModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      if (branches.length > 0 && (!locationOrBranch || !branches.some((b) => b.name === locationOrBranch))) {
+        setLocationOrBranch(branches[0].name);
+      }
       if (!assignedDate) {
         setAssignedDate(new Date().toISOString().slice(0, 10));
       }
@@ -51,7 +54,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
         setExpectedReturnDate(nextWeek.toISOString().slice(0, 10));
       }
     }
-  }, [isOpen, assignedDate, expectedReturnDate]);
+  }, [isOpen, assignedDate, expectedReturnDate, branches, locationOrBranch]);
 
   const [purpose, setPurpose] = useState('');
   const [notes, setNotes] = useState('');

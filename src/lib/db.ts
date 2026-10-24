@@ -478,6 +478,51 @@ export async function returnAsset(
   return asset;
 }
 
+export const DEFAULT_BRANCHES: Branch[] = [
+  {
+    id: 'BR-01',
+    name: 'Colombo Flagship Showroom',
+    code: 'COL-FLAG',
+    type: 'Showroom',
+  },
+  {
+    id: 'BR-02',
+    name: 'Kandy City Centre',
+    code: 'KCC-01',
+    type: 'Showroom',
+  },
+  {
+    id: 'BR-03',
+    name: 'Nawala HQ (Head Office)',
+    code: 'HQ-NAWALA',
+    type: 'Head Office',
+  },
+  {
+    id: 'BR-04',
+    name: 'OGF (One Galle Face)',
+    code: 'OGF-01',
+    type: 'Outlet',
+  },
+  {
+    id: 'BR-05',
+    name: 'Negombo Branch',
+    code: 'NEG-01',
+    type: 'Showroom',
+  },
+  {
+    id: 'BR-06',
+    name: 'Kelaniya Central Warehouse',
+    code: 'WH-KEL',
+    type: 'Warehouse',
+  },
+  {
+    id: 'BR-07',
+    name: 'IT Lab & Staging Area',
+    code: 'IT-LAB',
+    type: 'IT Department',
+  },
+];
+
 export async function getBranches(): Promise<Branch[]> {
   const supabase = getSupabase();
   if (supabase) {
@@ -491,7 +536,62 @@ export async function getBranches(): Promise<Branch[]> {
     }
   }
   const db = await readDatabase();
+  if (!db.branches) {
+    db.branches = DEFAULT_BRANCHES;
+    await writeDatabase(db);
+  }
   return db.branches;
+}
+
+export async function createBranch(data: Omit<Branch, 'id'>): Promise<Branch> {
+  const db = await readDatabase();
+  db.branches = db.branches || [];
+
+  const nextNum = String(db.branches.length + 1).padStart(2, '0');
+  const newId = `BR-${nextNum}`;
+
+  const newBranch: Branch = {
+    id: newId,
+    name: data.name.trim(),
+    code: data.code.trim().toUpperCase(),
+    type: data.type,
+  };
+
+  db.branches.push(newBranch);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('branches').insert([newBranch]);
+    } catch (e) {
+      console.warn('Supabase branch insert failed:', e);
+    }
+  }
+
+  return newBranch;
+}
+
+export async function deleteBranch(id: string): Promise<boolean> {
+  const db = await readDatabase();
+  db.branches = db.branches || [];
+
+  const initialLength = db.branches.length;
+  db.branches = db.branches.filter((b) => b.id !== id);
+  if (db.branches.length !== initialLength) {
+    await writeDatabase(db);
+  }
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('branches').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase branch delete failed:', e);
+    }
+  }
+
+  return true;
 }
 
 export async function getDepartments(): Promise<Department[]> {

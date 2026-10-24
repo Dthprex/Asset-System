@@ -1,6 +1,46 @@
 {
-  "branches": [],
-  "departments": [],
+  "branches": [
+    {
+      "id": "BR-07",
+      "name": "IT Lab & Staging Area",
+      "code": "IT-LAB",
+      "type": "IT Department"
+    }
+  ],
+  "departments": [
+    {
+      "id": "DEP-01",
+      "name": "Digital Marketing & Content Creation"
+    },
+    {
+      "id": "DEP-02",
+      "name": "IT & Systems Infrastructure"
+    },
+    {
+      "id": "DEP-03",
+      "name": "Retail Showrooms & Operations"
+    },
+    {
+      "id": "DEP-04",
+      "name": "E-Commerce & Online Orders"
+    },
+    {
+      "id": "DEP-05",
+      "name": "Finance, Accounts & Procurement"
+    },
+    {
+      "id": "DEP-06",
+      "name": "Human Resources & Administration"
+    },
+    {
+      "id": "DEP-07",
+      "name": "Logistics, Packing & Delivery"
+    },
+    {
+      "id": "DEP-08",
+      "name": "Customer Experience & Hotline"
+    }
+  ],
   "assets": [],
   "custodyHistory": [],
   "repairTickets": [],

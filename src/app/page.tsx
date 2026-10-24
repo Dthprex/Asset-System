@@ -96,7 +96,7 @@ function DashboardContent() {
               Enterprise Fleet & Custody Command Center
             </h1>
             <p className="text-xs text-slate-600 mt-1.5 max-w-xl leading-relaxed">
-              Real-time tracking of hardware, cameras, barcode POS, and cellular tablets across Colombo Flagship, KCC Kandy, Nawala HQ, OGF, Negombo, and Kelaniya logistics.
+              Real-time tracking of hardware, cameras, barcode POS, and cellular tablets across cosmetics.lk retail showrooms, logistics warehouses, and headquarters.
             </p>
           </div>
 

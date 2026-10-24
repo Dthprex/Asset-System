@@ -82,10 +82,16 @@ export const NewAssetModal: React.FC<NewAssetModalProps> = ({
   const [assignedToName, setAssignedToName] = useState('');
   const [assignedToRole, setAssignedToRole] = useState('');
   const [assignedToContact, setAssignedToContact] = useState('');
-  const [locationOrBranch, setLocationOrBranch] = useState(branches[0]?.name || 'Colombo Flagship Showroom (Galle Rd)');
+  const [locationOrBranch, setLocationOrBranch] = useState(branches[0]?.name || 'Colombo Flagship Showroom');
   const [department, setDepartment] = useState(departments[0]?.name || 'Retail Showrooms & Operations');
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
   const [purpose, setPurpose] = useState('');
+
+  useEffect(() => {
+    if (branches.length > 0 && (!locationOrBranch || !branches.some((b) => b.name === locationOrBranch))) {
+      setLocationOrBranch(branches[0].name);
+    }
+  }, [branches, locationOrBranch]);
 
   if (!isOpen) return null;
 

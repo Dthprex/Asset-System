@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { AppShell, useApp } from '@/components/AppShell';
 import { 
   Store, 
@@ -10,13 +11,73 @@ import {
   Tag, 
   Coins, 
   History, 
-  ArrowRight 
+  ArrowRight,
+  Plus,
+  Trash2 
 } from 'lucide-react';
 import { formatLKR } from '@/lib/utils';
+import { NewBranchModal } from '@/components/NewBranchModal';
 
 function BranchesContent() {
-  const { branches, assets, openDetail } = useApp();
+  const { branches, assets, openDetail, refreshData, showToast } = useApp();
+  const searchParams = useSearchParams();
+  const branchParam = searchParams.get('branch');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('ALL');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (branchParam && branches.length > 0) {
+      const q = branchParam.toLowerCase();
+      const match = branches.find(
+        (b) =>
+          b.id.toLowerCase() === q ||
+          b.code.toLowerCase() === q ||
+          b.name.toLowerCase().includes(q)
+      );
+      if (match) {
+        setSelectedBranchId(match.id);
+      }
+    }
+  }, [branchParam, branches]);
+
+  const handleBranchCreated = (newBranch: any) => {
+    refreshData();
+    showToast(`Added new location: ${newBranch.name}`);
+    setSelectedBranchId(newBranch.id);
+  };
+
+  const handleDeleteBranch = async (branchId: string, branchName: string, assetCount: number) => {
+    if (assetCount > 0) {
+      alert(`Cannot delete "${branchName}" because it currently has ${assetCount} active asset(s) deployed. Please reassign or return the assets first.`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to remove "${branchName}" from the retail showroom network?`);
+    if (!confirmed) return;
+
+    setDeletingId(branchId);
+    try {
+      const res = await fetch(`/api/branches?id=${encodeURIComponent(branchId)}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (result.success) {
+        showToast(`Removed location: ${branchName}`);
+        if (selectedBranchId === branchId) {
+          setSelectedBranchId('ALL');
+        }
+        await refreshData();
+      } else {
+        alert(result.error || 'Failed to delete branch');
+      }
+    } catch (err) {
+      console.error('Failed to delete branch:', err);
+      alert('An error occurred while deleting the branch.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const branchStats = branches.map((b) => {
     const branchAssets = assets.filter((a) => a.currentAssignment?.locationOrBranch === b.name);
@@ -42,7 +103,7 @@ function BranchesContent() {
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f4e6d8] text-[#844c1d] border border-[#c28551]/30">
               Retail Network
             </span>
-            <span className="text-xs text-slate-400 font-mono">• 8 Islandwide Boutiques</span>
+            <span className="text-xs text-slate-400 font-mono">• {branches.length} Islandwide Boutiques</span>
           </div>
           <h1 className="text-xl font-bold text-slate-900 tracking-tight">Showrooms & Regional Deployments</h1>
           <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
@@ -50,11 +111,19 @@ function BranchesContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="px-4 py-2 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center">
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center hidden sm:block">
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Showroom Gear</span>
             <span className="text-base font-extrabold text-[#c28551]">{assets.length} Assets</span>
           </div>
+
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2.5 rounded-2xl bg-[#c28551] hover:bg-[#a96f3e] text-white font-semibold text-xs transition shadow-sm hover:shadow flex items-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Shop Location</span>
+          </button>
         </div>
       </div>
 
@@ -76,7 +145,7 @@ function BranchesContent() {
           </div>
           <div className="mt-3 flex items-center justify-between text-xs">
             <span className="font-semibold text-[#c28551]">{assets.length} Total Devices</span>
-            <span className="text-slate-400 text-[11px] font-mono">8 Branches</span>
+            <span className="text-slate-400 text-[11px] font-mono">{branches.length} Locations</span>
           </div>
         </button>
 
@@ -96,9 +165,24 @@ function BranchesContent() {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">{b.code}</span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-600">
-                    {b.type}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold bg-slate-100 text-slate-600">
+                      {b.type}
+                    </span>
+                    {b.count === 0 && (
+                      <span
+                        role="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteBranch(b.id, b.name, b.count);
+                        }}
+                        className="p-1 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-md transition cursor-pointer"
+                        title={`Delete empty branch ${b.name}`}
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-xs font-bold text-slate-900 mt-1 line-clamp-1">{b.name}</div>
               </div>
@@ -122,13 +206,28 @@ function BranchesContent() {
             </span>
           </h2>
 
-          {selectedBranchId !== 'ALL' && (
-            <button
-              onClick={() => setSelectedBranchId('ALL')}
-              className="text-xs font-semibold text-[#c28551] hover:text-[#a66c3b] btn-press-sm px-2.5 py-1 rounded-lg hover:bg-[#fbf5ef]"
-            >
-              Show All Showrooms
-            </button>
+          {selectedBranchId !== 'ALL' && activeBranch && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDeleteBranch(activeBranch.id, activeBranch.name, activeBranch.count)}
+                disabled={deletingId === activeBranch.id}
+                className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition flex items-center gap-1.5 cursor-pointer ${
+                  activeBranch.count > 0 
+                    ? 'text-slate-400 border-slate-200 bg-slate-50 cursor-not-allowed opacity-70' 
+                    : 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200'
+                }`}
+                title={activeBranch.count > 0 ? "Cannot delete location with assigned hardware" : "Delete this shop location"}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deletingId === activeBranch.id ? 'Deleting...' : 'Delete Location'}</span>
+              </button>
+              <button
+                onClick={() => setSelectedBranchId('ALL')}
+                className="text-xs font-semibold text-[#c28551] hover:text-[#a66c3b] btn-press-sm px-2.5 py-1 rounded-lg hover:bg-[#fbf5ef]"
+              >
+                Show All Showrooms
+              </button>
+            </div>
           )}
         </div>
 
@@ -172,6 +271,13 @@ function BranchesContent() {
           </div>
         )}
       </div>
+
+      {/* New Location Modal */}
+      <NewBranchModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleBranchCreated}
+      />
 
     </div>
   );
