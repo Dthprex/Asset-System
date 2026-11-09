@@ -5,6 +5,8 @@ import { calculateDuration, calculateNextBiannualDate } from './utils';
 import { getSupabase, isSupabaseConfigured } from './supabase';
 
 const DATA_FILE_PATH = path.join(process.cwd(), 'src', 'data', 'database.json');
+const TMP_DATA_FILE_PATH = '/tmp/cosmetics-assets-database.json';
+let memoryDbCache: DatabaseSchema | null = null;
 
 // --- Supabase PostgreSQL Data Mappers ---
 function mapRowToAsset(row: any): Asset {
@@ -35,6 +37,8 @@ function mapRowToAsset(row: any): Asset {
 }
 
 function mapAssetToRow(asset: Asset): any {
+  const today = new Date().toISOString().slice(0, 10);
+  const defaultWarranty = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   return {
     id: asset.id,
     asset_tag: asset.assetTag,
@@ -47,17 +51,17 @@ function mapAssetToRow(asset: Asset): any {
     imei1: asset.imei1 || null,
     imei2: asset.imei2 || null,
     condition: asset.condition,
-    purchase_date: asset.purchaseDate,
-    warranty_end_date: asset.warrantyEndDate,
-    purchase_location: asset.purchaseLocation,
-    purchase_amount: asset.purchaseAmount,
+    purchase_date: asset.purchaseDate && asset.purchaseDate.trim() ? asset.purchaseDate : today,
+    warranty_end_date: asset.warrantyEndDate && asset.warrantyEndDate.trim() ? asset.warrantyEndDate : defaultWarranty,
+    purchase_location: asset.purchaseLocation || 'Colombo Vendor',
+    purchase_amount: Number(asset.purchaseAmount) || 0,
     currency: asset.currency || 'LKR',
     invoice_doc: asset.invoiceDoc || null,
     images: asset.images || [],
     status: asset.status,
     current_assignment: asset.currentAssignment || null,
-    created_at: asset.createdAt,
-    updated_at: asset.updatedAt,
+    created_at: asset.createdAt || new Date().toISOString(),
+    updated_at: asset.updatedAt || new Date().toISOString(),
   };
 }
 
@@ -193,6 +197,23 @@ function mapMaintenanceToRow(m: MaintenanceRecord): any {
 }
 
 export async function readDatabase(): Promise<DatabaseSchema> {
+  // 1. Check writable /tmp database first (used on Vercel / serverless)
+  try {
+    const tmpRaw = await fs.readFile(TMP_DATA_FILE_PATH, 'utf-8');
+    const tmpData = JSON.parse(tmpRaw) as DatabaseSchema;
+    tmpData.repairTickets = tmpData.repairTickets || [];
+    tmpData.maintenanceRecords = tmpData.maintenanceRecords || [];
+    memoryDbCache = tmpData;
+    return tmpData;
+  } catch {
+    // /tmp file does not exist yet
+  }
+
+  if (memoryDbCache) {
+    return memoryDbCache;
+  }
+
+  // 2. Fall back to bundled src/data/database.json
   try {
     const raw = await fs.readFile(DATA_FILE_PATH, 'utf-8');
     const data = JSON.parse(raw) as DatabaseSchema;
@@ -202,6 +223,7 @@ export async function readDatabase(): Promise<DatabaseSchema> {
     if (!data.maintenanceRecords) {
       data.maintenanceRecords = [];
     }
+    memoryDbCache = data;
     return data;
   } catch (error) {
     console.error('Failed to read database file:', error);
@@ -217,33 +239,66 @@ export async function readDatabase(): Promise<DatabaseSchema> {
 }
 
 export async function writeDatabase(data: DatabaseSchema): Promise<void> {
-  if (process.env.VERCEL) {
-    return;
-  }
+  memoryDbCache = data;
+  const serialized = JSON.stringify(data, null, 2);
+
+  // Always write to /tmp so serverless environments (Vercel) persist mutations across requests
   try {
-    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error: any) {
-    console.warn('Skipping local database.json write (read-only filesystem):', error?.code || error?.message);
+    await fs.writeFile(TMP_DATA_FILE_PATH, serialized, 'utf-8');
+  } catch (tmpErr: any) {
+    console.warn('Could not write to /tmp database:', tmpErr?.code || tmpErr?.message);
+  }
+
+  if (!process.env.VERCEL) {
+    try {
+      await fs.writeFile(DATA_FILE_PATH, serialized, 'utf-8');
+    } catch (error: any) {
+      console.warn('Skipping local database.json write (read-only filesystem):', error?.code || error?.message);
+    }
   }
 }
 
 export async function getAllAssets(): Promise<Asset[]> {
+  const db = await readDatabase();
+  const localAssets = db.assets || [];
+
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
       if (!error && data && data.length > 0) {
-        return data.map(mapRowToAsset);
+        const supabaseAssets = data.map(mapRowToAsset);
+        const mergedMap = new Map<string, Asset>();
+
+        for (const a of localAssets) {
+          mergedMap.set(a.id, a);
+        }
+        for (const sa of supabaseAssets) {
+          const existing = mergedMap.get(sa.id);
+          if (!existing || new Date(sa.updatedAt).getTime() >= new Date(existing.updatedAt).getTime()) {
+            mergedMap.set(sa.id, sa);
+          }
+        }
+
+        return Array.from(mergedMap.values()).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       }
     } catch (e) {
       console.warn('Supabase query failed, falling back to local JSON:', e);
     }
   }
-  const db = await readDatabase();
-  return db.assets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  return localAssets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function getAssetById(id: string): Promise<{ asset: Asset; history: CustodyRecord[] } | null> {
+  const db = await readDatabase();
+  const localAsset = db.assets.find((a) => a.id === id || a.assetTag.toLowerCase() === id.toLowerCase());
+  const localHistory = localAsset
+    ? db.custodyHistory.filter((h) => h.assetId === localAsset.id)
+    : [];
+
   const supabase = getSupabase();
   if (supabase) {
     try {
@@ -260,9 +315,22 @@ export async function getAssetById(id: string): Promise<{ asset: Asset; history:
           .eq('asset_id', assetRow.id)
           .order('date', { ascending: false });
 
+        const supaHistory = (historyRows || []).map(mapRowToCustody);
+        const historyMap = new Map<string, CustodyRecord>();
+        for (const h of localHistory) historyMap.set(h.id, h);
+        for (const h of supaHistory) historyMap.set(h.id, h);
+
+        const supaAsset = mapRowToAsset(assetRow);
+        const bestAsset =
+          localAsset && new Date(localAsset.updatedAt).getTime() > new Date(supaAsset.updatedAt).getTime()
+            ? localAsset
+            : supaAsset;
+
         return {
-          asset: mapRowToAsset(assetRow),
-          history: (historyRows || []).map(mapRowToCustody),
+          asset: bestAsset,
+          history: Array.from(historyMap.values()).sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          ),
         };
       }
     } catch (e) {
@@ -270,15 +338,12 @@ export async function getAssetById(id: string): Promise<{ asset: Asset; history:
     }
   }
 
-  const db = await readDatabase();
-  const asset = db.assets.find((a) => a.id === id || a.assetTag.toLowerCase() === id.toLowerCase());
-  if (!asset) return null;
+  if (!localAsset) return null;
 
-  const history = db.custodyHistory
-    .filter((h) => h.assetId === asset.id)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  return { asset, history };
+  return {
+    asset: localAsset,
+    history: localHistory.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+  };
 }
 
 export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>): Promise<Asset> {
@@ -340,10 +405,25 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
   const supabase = getSupabase();
   if (supabase) {
     try {
-      await supabase.from('assets').insert(mapAssetToRow(newAsset));
-      await supabase.from('custody_history').insert(mapCustodyToRow(intakeHistory));
-      if (assignHistory) {
-        await supabase.from('custody_history').insert(mapCustodyToRow(assignHistory));
+      const row = mapAssetToRow(newAsset);
+      let { error: assetErr } = await supabase.from('assets').upsert(row);
+
+      // Handle unique constraint collision on serial_number or asset_tag if user re-tested with same serial
+      if (assetErr && /duplicate key|unique constraint/i.test(assetErr.message)) {
+        const suffix = String(Date.now()).slice(-4);
+        row.serial_number = `${row.serial_number}-${suffix}`;
+        row.asset_tag = `${row.asset_tag}-${suffix}`;
+        const retry = await supabase.from('assets').upsert(row);
+        assetErr = retry.error;
+      }
+
+      if (assetErr) {
+        console.warn('Supabase asset upsert warning:', assetErr.message);
+      } else {
+        await supabase.from('custody_history').upsert(mapCustodyToRow(intakeHistory));
+        if (assignHistory) {
+          await supabase.from('custody_history').upsert(mapCustodyToRow(assignHistory));
+        }
       }
     } catch (e) {
       console.warn('Supabase sync insert failed:', e);

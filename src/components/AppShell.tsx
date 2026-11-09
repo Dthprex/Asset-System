@@ -87,13 +87,81 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const LOCAL_ASSETS_STORAGE_KEY = 'cosmetics_lk_local_assets_v1';
+
+  const getLocalSavedAssets = useCallback((): Asset[] => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = window.localStorage.getItem(LOCAL_ASSETS_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as Asset[]) : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const saveLocalAsset = useCallback((asset: Asset) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const current = getLocalSavedAssets();
+      const updated = [asset, ...current.filter((a) => a.id !== asset.id && a.assetTag !== asset.assetTag)];
+      window.localStorage.setItem(LOCAL_ASSETS_STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not persist asset to localStorage:', e);
+    }
+  }, [getLocalSavedAssets]);
+
+  const mergeWithLocalAssets = useCallback((serverAssets: Asset[]): Asset[] => {
+    const localAssets = getLocalSavedAssets();
+    if (localAssets.length === 0) return serverAssets;
+
+    const map = new Map<string, Asset>();
+    for (const a of serverAssets) {
+      map.set(a.id, a);
+    }
+    for (const la of localAssets) {
+      const existing = map.get(la.id);
+      if (!existing || new Date(la.updatedAt).getTime() >= new Date(existing.updatedAt).getTime()) {
+        map.set(la.id, la);
+      }
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [getLocalSavedAssets]);
+
+  const computeStatsFromAssets = useCallback((allAssets: Asset[], baseStats: any) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    return {
+      ...baseStats,
+      totalAssets: allAssets.length,
+      totalValueLKR: allAssets.reduce((sum, a) => sum + (Number(a.purchaseAmount) || 0), 0),
+      availableCount: allAssets.filter((a) => a.status === 'AVAILABLE').length,
+      allocatedCount: allAssets.filter((a) => a.status === 'ALLOCATED_PERMANENT').length,
+      borrowedCount: allAssets.filter((a) => a.status === 'BORROWED_TEMPORARY').length,
+      repairCount: allAssets.filter((a) => a.status === 'UNDER_REPAIR').length,
+      expiringWarrantyCount: allAssets.filter((a) => {
+        if (!a.warrantyEndDate) return false;
+        const wDate = new Date(a.warrantyEndDate);
+        return wDate >= today && wDate <= in30Days;
+      }).length,
+      expiredWarrantyCount: allAssets.filter((a) => {
+        if (!a.warrantyEndDate) return false;
+        const wDate = new Date(a.warrantyEndDate);
+        return wDate < today;
+      }).length,
+    };
+  }, []);
+
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
       const [assetsRes, statsRes, branchesRes] = await Promise.all([
-        fetch('/api/assets'),
-        fetch('/api/stats'),
-        fetch('/api/branches'),
+        fetch('/api/assets', { cache: 'no-store' }),
+        fetch('/api/stats', { cache: 'no-store' }),
+        fetch('/api/branches', { cache: 'no-store' }),
       ]);
 
       const [assetsData, statsData, branchesData] = await Promise.all([
@@ -102,8 +170,12 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         branchesRes.json(),
       ]);
 
-      if (assetsData.success) setAssets(assetsData.data || []);
-      if (statsData.success) setStats(statsData.data);
+      const mergedAssets = mergeWithLocalAssets(assetsData.success ? assetsData.data || [] : []);
+      setAssets(mergedAssets);
+
+      if (statsData.success) {
+        setStats(computeStatsFromAssets(mergedAssets, statsData.data));
+      }
       if (branchesData.success) {
         setBranches(branchesData.branches || []);
         setDepartments(branchesData.departments || []);
@@ -114,7 +186,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [mergeWithLocalAssets, computeStatsFromAssets]);
 
   useEffect(() => {
     loadData();
@@ -176,17 +248,42 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   }, []);
 
   const handleAssetCreated = (newAsset: Asset) => {
-    showToast(`Registered ${newAsset.name} (${newAsset.assetTag}) into inventory!`);
+    saveLocalAsset(newAsset);
+    setAssets((prev) => {
+      const next = [newAsset, ...prev.filter((a) => a.id !== newAsset.id)];
+      setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
+      return next;
+    });
+
+    if (newAsset.currentAssignment) {
+      showToast(
+        `Registered & deployed ${newAsset.name} (${newAsset.assetTag}) to ${newAsset.currentAssignment.assignedToName}!`
+      );
+    } else {
+      showToast(`Registered ${newAsset.name} (${newAsset.assetTag}) into inventory!`);
+    }
     loadData();
   };
 
   const handleAssetAssigned = (updated: Asset) => {
+    saveLocalAsset(updated);
+    setAssets((prev) => {
+      const next = prev.map((a) => (a.id === updated.id ? updated : a));
+      setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
+      return next;
+    });
     showToast(`Assigned ${updated.name} to ${updated.currentAssignment?.assignedToName}!`);
     loadData();
     openHandoverVoucher(updated);
   };
 
   const handleAssetReturned = (updated: Asset) => {
+    saveLocalAsset(updated);
+    setAssets((prev) => {
+      const next = prev.map((a) => (a.id === updated.id ? updated : a));
+      setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
+      return next;
+    });
     showToast(`Returned ${updated.name} to Central IT Lab!`);
     loadData();
   };

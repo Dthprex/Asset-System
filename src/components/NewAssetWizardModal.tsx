@@ -121,6 +121,31 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     return true;
   };
 
+  const resetForm = () => {
+    setStep(1);
+    setName('');
+    setCategory('Laptop');
+    setBrand('');
+    setModelNumber('');
+    setSerialNumber('');
+    setHasSim(false);
+    setImei1('');
+    setImei2('');
+    setCondition('Brand New');
+    setPurchaseLocation('Future World Colombo 03');
+    setPurchaseAmount(150000);
+    setImages(['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80']);
+    setInvoiceDoc('/uploads/sample-invoice-macbook.svg');
+    setAssignImmediately(false);
+    setAssignmentType('LOCATION_SHOWROOM');
+    setAssignedToName('');
+    setAssignedToRole('');
+    setAssignedToContact('');
+    setExpectedReturnDate('');
+    setPurpose('');
+    setError(null);
+  };
+
   const handleSubmit = async () => {
     setError(null);
     setSubmitting(true);
@@ -136,8 +161,10 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
         imei1: hasSim ? imei1 : '',
         imei2: hasSim ? imei2 : '',
         condition,
-        purchaseDate,
-        warrantyEndDate,
+        purchaseDate: purchaseDate || new Date().toISOString().slice(0, 10),
+        warrantyEndDate:
+          warrantyEndDate ||
+          new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
         purchaseLocation: purchaseLocation || 'Colombo Vendor',
         purchaseAmount: Number(purchaseAmount),
         images: images.length > 0 ? images : [imageUrl],
@@ -145,16 +172,22 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
       };
 
       if (assignImmediately) {
+        const defaultReturn = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10);
         payload.currentAssignment = {
           assignmentType,
-          assignedToName: assignedToName || locationOrBranch,
-          assignedToRole,
-          assignedToContact,
-          assignedDate: purchaseDate,
-          expectedReturnDate: assignmentType === 'TEMPORARY_BORROW' ? expectedReturnDate : '',
+          assignedToName: assignedToName.trim() || locationOrBranch,
+          assignedToRole: assignedToRole.trim() || 'Authorized Custodian',
+          assignedToContact: assignedToContact.trim(),
+          assignedDate: purchaseDate || new Date().toISOString().slice(0, 10),
+          expectedReturnDate:
+            assignmentType === 'TEMPORARY_BORROW'
+              ? expectedReturnDate || defaultReturn
+              : '',
           locationOrBranch,
           department,
-          purpose,
+          purpose: purpose.trim() || 'Initial deployment upon procurement intake',
         };
       }
 
@@ -170,6 +203,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
       }
 
       onSuccess(data.data);
+      resetForm();
       onClose();
     } catch (err: any) {
       setError(err.message || 'An error occurred during asset intake');
