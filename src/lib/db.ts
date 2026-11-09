@@ -217,7 +217,14 @@ export async function readDatabase(): Promise<DatabaseSchema> {
 }
 
 export async function writeDatabase(data: DatabaseSchema): Promise<void> {
-  await fs.writeFile(DATA_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  if (process.env.VERCEL) {
+    return;
+  }
+  try {
+    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (error: any) {
+    console.warn('Skipping local database.json write (read-only filesystem):', error?.code || error?.message);
+  }
 }
 
 export async function getAllAssets(): Promise<Asset[]> {
@@ -276,10 +283,14 @@ export async function getAssetById(id: string): Promise<{ asset: Asset; history:
 
 export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' | 'updatedAt'>): Promise<Asset> {
   const db = await readDatabase();
+  const existingAssets = await getAllAssets();
   
-  // Generate unique ID
-  const newNum = db.assets.length + 1001;
-  const newId = `AST-${newNum}`;
+  // Generate unique ID across both Supabase and local JSON
+  const maxNum = existingAssets.reduce((max, a) => {
+    const num = parseInt(a.id.replace(/\D/g, ''), 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 1000);
+  const newId = `AST-${maxNum + 1}`;
   const now = new Date().toISOString();
   
   const newAsset: Asset = {
@@ -345,18 +356,30 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
 export async function updateAsset(id: string, updates: Partial<Asset>): Promise<Asset | null> {
   const db = await readDatabase();
   const index = db.assets.findIndex((a) => a.id === id);
-  if (index === -1) return null;
+  const existing = index !== -1 ? db.assets[index] : (await getAssetById(id))?.asset;
+  if (!existing) return null;
 
-  const current = db.assets[index];
   const updatedAsset: Asset = {
-    ...current,
+    ...existing,
     ...updates,
-    id: current.id, // prevent ID override
+    id: existing.id, // prevent ID override
     updatedAt: new Date().toISOString(),
   };
 
-  db.assets[index] = updatedAsset;
-  await writeDatabase(db);
+  if (index !== -1) {
+    db.assets[index] = updatedAsset;
+    await writeDatabase(db);
+  }
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').update(mapAssetToRow(updatedAsset)).eq('id', updatedAsset.id);
+    } catch (e) {
+      console.warn('Supabase sync updateAsset failed:', e);
+    }
+  }
+
   return updatedAsset;
 }
 
@@ -367,9 +390,10 @@ export async function assignAsset(
 ): Promise<Asset | null> {
   const db = await readDatabase();
   const index = db.assets.findIndex((a) => a.id === id);
-  if (index === -1) return null;
+  const asset = index !== -1 ? db.assets[index] : (await getAssetById(id))?.asset;
+  if (!asset) return null;
 
-  const asset = db.assets[index];
+  const hadPreviousAssignment = Boolean(asset.currentAssignment);
   const previousHolder = asset.currentAssignment
     ? `${asset.currentAssignment.assignedToName} (${asset.currentAssignment.locationOrBranch})`
     : 'IT Central Inventory';
@@ -387,7 +411,7 @@ export async function assignAsset(
   const newHistory: CustodyRecord = {
     id: `HIS-${Date.now().toString().slice(-6)}`,
     assetId: asset.id,
-    action: asset.currentAssignment ? 'TRANSFERRED' : 'ASSIGNED',
+    action: hadPreviousAssignment ? 'TRANSFERRED' : 'ASSIGNED',
     date: assignment.assignedDate || new Date().toISOString().slice(0, 10),
     performedBy,
     previousHolder,
@@ -396,6 +420,9 @@ export async function assignAsset(
     notes: `${assignment.purpose || 'Assigned'}. ${isBorrow && assignment.expectedReturnDate ? `Expected return: ${assignment.expectedReturnDate}` : ''}`,
   };
 
+  if (index !== -1) {
+    db.assets[index] = asset;
+  }
   db.custodyHistory.unshift(newHistory);
   await writeDatabase(db);
 
@@ -425,9 +452,9 @@ export async function returnAsset(
 ): Promise<Asset | null> {
   const db = await readDatabase();
   const index = db.assets.findIndex((a) => a.id === id);
-  if (index === -1) return null;
+  const asset = index !== -1 ? db.assets[index] : (await getAssetById(id))?.asset;
+  if (!asset) return null;
 
-  const asset = db.assets[index];
   const prevAssignment = asset.currentAssignment;
   const previousHolder = prevAssignment
     ? `${prevAssignment.assignedToName} (${prevAssignment.locationOrBranch})`
@@ -462,6 +489,9 @@ export async function returnAsset(
     returnPhotos: returnDetails.returnPhotos || [],
   };
 
+  if (index !== -1) {
+    db.assets[index] = asset;
+  }
   db.custodyHistory.unshift(returnHistory);
   await writeDatabase(db);
 
@@ -546,8 +576,13 @@ export async function getBranches(): Promise<Branch[]> {
 export async function createBranch(data: Omit<Branch, 'id'>): Promise<Branch> {
   const db = await readDatabase();
   db.branches = db.branches || [];
+  const existingBranches = await getBranches();
 
-  const nextNum = String(db.branches.length + 1).padStart(2, '0');
+  const maxNum = existingBranches.reduce((max, b) => {
+    const num = parseInt(b.id.replace(/\D/g, ''), 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+  const nextNum = String(maxNum + 1).padStart(2, '0');
   const newId = `BR-${nextNum}`;
 
   const newBranch: Branch = {
@@ -673,8 +708,8 @@ export async function getRepairTickets(): Promise<RepairTicket[]> {
 }
 
 export async function getRepairTicketsByAsset(assetId: string): Promise<RepairTicket[]> {
-  const db = await readDatabase();
-  return (db.repairTickets || [])
+  const tickets = await getRepairTickets();
+  return tickets
     .filter((t) => t.assetId === assetId)
     .sort((a, b) => new Date(b.dispatchedDate).getTime() - new Date(a.dispatchedDate).getTime());
 }
@@ -684,9 +719,15 @@ export async function createRepairTicket(
 ): Promise<RepairTicket> {
   const db = await readDatabase();
   db.repairTickets = db.repairTickets || [];
+  const existingTickets = await getRepairTickets();
 
   const year = new Date().getFullYear();
-  const nextNum = String(db.repairTickets.length + 1).padStart(3, '0');
+  const maxNum = existingTickets.reduce((max, t) => {
+    const parts = t.id.split('-');
+    const num = parseInt(parts[parts.length - 1], 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+  const nextNum = String(maxNum + 1).padStart(3, '0');
   const newId = `RMA-${year}-${nextNum}`;
 
   const newTicket: RepairTicket = {
@@ -698,11 +739,13 @@ export async function createRepairTicket(
 
   // Update target asset status to UNDER_REPAIR
   const assetIndex = db.assets.findIndex((a) => a.id === ticketData.assetId);
-  if (assetIndex !== -1) {
-    const asset = db.assets[assetIndex];
-    asset.status = 'UNDER_REPAIR';
-    asset.condition = 'Damaged / Needs Repair';
-    asset.currentAssignment = {
+  const targetAsset = assetIndex !== -1 ? db.assets[assetIndex] : (await getAssetById(ticketData.assetId))?.asset;
+  let historyRecord: CustodyRecord | null = null;
+
+  if (targetAsset) {
+    targetAsset.status = 'UNDER_REPAIR';
+    targetAsset.condition = 'Damaged / Needs Repair';
+    targetAsset.currentAssignment = {
       assignmentType: 'VENDOR_REPAIR',
       assignedToName: `Vendor: ${ticketData.vendorName}`,
       assignedToRole: `RMA #${ticketData.rmaNumber}`,
@@ -714,10 +757,14 @@ export async function createRepairTicket(
       purpose: `Dispatched for service: ${ticketData.issueDescription}`,
       notes: ticketData.notes || '',
     };
-    asset.updatedAt = new Date().toISOString();
+    targetAsset.updatedAt = new Date().toISOString();
+
+    if (assetIndex !== -1) {
+      db.assets[assetIndex] = targetAsset;
+    }
 
     // Add custody history entry
-    const historyRecord: CustodyRecord = {
+    historyRecord = {
       id: `HIS-${Date.now().toString().slice(-6)}`,
       assetId: ticketData.assetId,
       action: 'REPAIR_SENT',
@@ -732,6 +779,22 @@ export async function createRepairTicket(
   }
 
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('repair_tickets').insert(mapRepairToRow(newTicket));
+      if (targetAsset) {
+        await supabase.from('assets').update(mapAssetToRow(targetAsset)).eq('id', targetAsset.id);
+      }
+      if (historyRecord) {
+        await supabase.from('custody_history').insert(mapCustodyToRow(historyRecord));
+      }
+    } catch (e) {
+      console.warn('Supabase sync createRepairTicket failed:', e);
+    }
+  }
+
   return newTicket;
 }
 
@@ -743,28 +806,39 @@ export async function updateRepairTicket(
   db.repairTickets = db.repairTickets || [];
 
   const index = db.repairTickets.findIndex((t) => t.id === id);
-  if (index === -1) return null;
+  const allTickets = index === -1 ? await getRepairTickets() : db.repairTickets;
+  const current = index !== -1 ? db.repairTickets[index] : allTickets.find((t) => t.id === id);
+  if (!current) return null;
 
-  const current = db.repairTickets[index];
   const updatedTicket: RepairTicket = {
     ...current,
     ...updates,
     id: current.id, // prevent ID override
   };
 
-  db.repairTickets[index] = updatedTicket;
+  if (index !== -1) {
+    db.repairTickets[index] = updatedTicket;
+  }
 
   // If status is transitioning to RETURNED_TO_FLEET, restore asset to AVAILABLE
+  let restoredAsset: Asset | null = null;
+  let returnHistory: CustodyRecord | null = null;
+
   if (updates.status === 'RETURNED_TO_FLEET') {
     const assetIndex = db.assets.findIndex((a) => a.id === updatedTicket.assetId);
-    if (assetIndex !== -1) {
-      const asset = db.assets[assetIndex];
+    const asset = assetIndex !== -1 ? db.assets[assetIndex] : (await getAssetById(updatedTicket.assetId))?.asset;
+    if (asset) {
       asset.status = 'AVAILABLE';
       asset.condition = 'Used - Good';
       asset.currentAssignment = null;
       asset.updatedAt = new Date().toISOString();
+      restoredAsset = asset;
 
-      const returnHistory: CustodyRecord = {
+      if (assetIndex !== -1) {
+        db.assets[assetIndex] = asset;
+      }
+
+      returnHistory = {
         id: `HIS-${Date.now().toString().slice(-6)}`,
         assetId: updatedTicket.assetId,
         action: 'REPAIR_COMPLETED',
@@ -780,15 +854,51 @@ export async function updateRepairTicket(
   }
 
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('repair_tickets').update(mapRepairToRow(updatedTicket)).eq('id', updatedTicket.id);
+      if (restoredAsset) {
+        await supabase.from('assets').update(mapAssetToRow(restoredAsset)).eq('id', restoredAsset.id);
+      }
+      if (returnHistory) {
+        await supabase.from('custody_history').insert(mapCustodyToRow(returnHistory));
+      }
+    } catch (e) {
+      console.warn('Supabase sync updateRepairTicket failed:', e);
+    }
+  }
+
   return updatedTicket;
 }
 
 export async function getMaintenanceRecords(): Promise<MaintenanceRecord[]> {
-  const db = await readDatabase();
   const today = new Date().toISOString().slice(0, 10);
+  let records: MaintenanceRecord[] = [];
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_records')
+        .select('*')
+        .order('scheduled_date', { ascending: true });
+      if (!error && data && data.length > 0) {
+        records = data.map(mapRowToMaintenance);
+      }
+    } catch (e) {
+      console.warn('Supabase maintenance records query failed:', e);
+    }
+  }
+
+  if (records.length === 0) {
+    const db = await readDatabase();
+    records = db.maintenanceRecords || [];
+  }
 
   // Auto-flag overdue records
-  const updated = (db.maintenanceRecords || []).map((m) => {
+  const updated = records.map((m) => {
     if (m.status === 'SCHEDULED' && m.scheduledDate < today) {
       return { ...m, status: 'OVERDUE' as const };
     }
@@ -810,9 +920,15 @@ export async function scheduleMaintenance(
 ): Promise<MaintenanceRecord> {
   const db = await readDatabase();
   db.maintenanceRecords = db.maintenanceRecords || [];
+  const existingRecords = await getMaintenanceRecords();
 
   const year = new Date().getFullYear();
-  const nextNum = String(db.maintenanceRecords.length + 1).padStart(3, '0');
+  const maxNum = existingRecords.reduce((max, m) => {
+    const parts = m.id.split('-');
+    const num = parseInt(parts[parts.length - 1], 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+  const nextNum = String(maxNum + 1).padStart(3, '0');
   const newId = `MNT-${year}-${nextNum}`;
 
   const nextScheduledDate =
@@ -827,6 +943,16 @@ export async function scheduleMaintenance(
 
   db.maintenanceRecords.unshift(newRecord);
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('maintenance_records').insert(mapMaintenanceToRow(newRecord));
+    } catch (e) {
+      console.warn('Supabase sync scheduleMaintenance failed:', e);
+    }
+  }
+
   return newRecord;
 }
 
@@ -838,9 +964,10 @@ export async function completeMaintenance(
   db.maintenanceRecords = db.maintenanceRecords || [];
 
   const index = db.maintenanceRecords.findIndex((m) => m.id === id);
-  if (index === -1) return null;
+  const allRecords = index === -1 ? await getMaintenanceRecords() : db.maintenanceRecords;
+  const current = index !== -1 ? db.maintenanceRecords[index] : allRecords.find((m) => m.id === id);
+  if (!current) return null;
 
-  const current = db.maintenanceRecords[index];
   const completedDate = completion.completedDate || new Date().toISOString().slice(0, 10);
   const nextScheduledDate = calculateNextBiannualDate(completedDate);
 
@@ -853,7 +980,9 @@ export async function completeMaintenance(
     nextScheduledDate,
   };
 
-  db.maintenanceRecords[index] = updatedRecord;
+  if (index !== -1) {
+    db.maintenanceRecords[index] = updatedRecord;
+  }
 
   // Add maintenance inspection record to custody history
   const historyRecord: CustodyRecord = {
@@ -870,12 +999,18 @@ export async function completeMaintenance(
   db.custodyHistory.unshift(historyRecord);
 
   // If Critical Risk detected, mark asset as UNDER_REPAIR
+  let criticalAsset: Asset | null = null;
   if (updatedRecord.healthGrade === 'CRITICAL_RISK') {
     const assetIndex = db.assets.findIndex((a) => a.id === updatedRecord.assetId);
-    if (assetIndex !== -1) {
-      db.assets[assetIndex].status = 'UNDER_REPAIR';
-      db.assets[assetIndex].condition = 'Damaged / Needs Repair';
-      db.assets[assetIndex].updatedAt = new Date().toISOString();
+    const asset = assetIndex !== -1 ? db.assets[assetIndex] : (await getAssetById(updatedRecord.assetId))?.asset;
+    if (asset) {
+      asset.status = 'UNDER_REPAIR';
+      asset.condition = 'Damaged / Needs Repair';
+      asset.updatedAt = new Date().toISOString();
+      criticalAsset = asset;
+      if (assetIndex !== -1) {
+        db.assets[assetIndex] = asset;
+      }
     }
   }
 
@@ -883,7 +1018,12 @@ export async function completeMaintenance(
   let nextRoutineRecord: MaintenanceRecord | undefined;
   if (updatedRecord.type === 'BIANNUAL_ROUTINE') {
     const year = new Date().getFullYear();
-    const nextNum = String(db.maintenanceRecords.length + 1).padStart(3, '0');
+    const maxNum = allRecords.reduce((max, m) => {
+      const parts = m.id.split('-');
+      const num = parseInt(parts[parts.length - 1], 10);
+      return !isNaN(num) && num > max ? num : max;
+    }, 0);
+    const nextNum = String(maxNum + 2).padStart(3, '0');
     nextRoutineRecord = {
       id: `MNT-${year}-${nextNum}`,
       assetId: updatedRecord.assetId,
@@ -910,6 +1050,23 @@ export async function completeMaintenance(
   }
 
   await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('maintenance_records').update(mapMaintenanceToRow(updatedRecord)).eq('id', updatedRecord.id);
+      await supabase.from('custody_history').insert(mapCustodyToRow(historyRecord));
+      if (criticalAsset) {
+        await supabase.from('assets').update(mapAssetToRow(criticalAsset)).eq('id', criticalAsset.id);
+      }
+      if (nextRoutineRecord) {
+        await supabase.from('maintenance_records').insert(mapMaintenanceToRow(nextRoutineRecord));
+      }
+    } catch (e) {
+      console.warn('Supabase sync completeMaintenance failed:', e);
+    }
+  }
+
   return { record: updatedRecord, nextRoutineRecord };
 }
 

@@ -190,11 +190,18 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
       {values.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
           {values.map((url, idx) => {
-            const isPdf = url.toLowerCase().endsWith('.pdf');
+            const isPdf =
+              url.toLowerCase().endsWith('.pdf') ||
+              url.startsWith('data:application/pdf');
+            const displayLabel = url.startsWith('data:')
+              ? isPdf
+                ? 'Uploaded PDF'
+                : `Uploaded Photo ${idx + 1}`
+              : url.split('/').pop();
 
             return (
               <div
-                key={url + idx}
+                key={idx}
                 className="relative group rounded-xl border border-slate-200 bg-white overflow-hidden shadow-xs p-1.5 flex flex-col items-center justify-between"
               >
                 {/* Media Preview Box */}
@@ -227,7 +234,7 @@ export const MediaUploadField: React.FC<MediaUploadFieldProps> = ({
                 {/* Footer bar with Remove button */}
                 <div className="w-full pt-1.5 flex items-center justify-between px-1 text-[10px]">
                   <span className="text-slate-500 font-mono truncate max-w-[90px]">
-                    {url.split('/').pop()}
+                    {displayLabel}
                   </span>
                   <button
                     type="button"
