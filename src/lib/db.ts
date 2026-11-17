@@ -258,6 +258,8 @@ export async function writeDatabase(data: DatabaseSchema): Promise<void> {
   }
 }
 
+let hasAutoSeededSupabase = false;
+
 export async function getAllAssets(): Promise<Asset[]> {
   const db = await readDatabase();
   const localAssets = db.assets || [];
@@ -266,23 +268,51 @@ export async function getAllAssets(): Promise<Asset[]> {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
-      if (!error && data && data.length > 0) {
-        const supabaseAssets = data.map(mapRowToAsset);
-        const mergedMap = new Map<string, Asset>();
-
-        for (const a of localAssets) {
-          mergedMap.set(a.id, a);
-        }
-        for (const sa of supabaseAssets) {
-          const existing = mergedMap.get(sa.id);
-          if (!existing || new Date(sa.updatedAt).getTime() >= new Date(existing.updatedAt).getTime()) {
-            mergedMap.set(sa.id, sa);
+      if (!error && data) {
+        if (data.length === 0 && localAssets.length > 0 && !hasAutoSeededSupabase) {
+          hasAutoSeededSupabase = true;
+          // Auto-seed initial database into Supabase on first connection
+          try {
+            if (db.branches?.length) {
+              await supabase.from('branches').upsert(db.branches.map((b) => ({ id: b.id, name: b.name, code: b.code, type: b.type })));
+            }
+            if (db.departments?.length) {
+              await supabase.from('departments').upsert(db.departments.map((d) => ({ id: d.id, name: d.name })));
+            }
+            await supabase.from('assets').upsert(localAssets.map(mapAssetToRow));
+            if (db.custodyHistory?.length) {
+              await supabase.from('custody_history').upsert(db.custodyHistory.map(mapCustodyToRow));
+            }
+            if (db.repairTickets?.length) {
+              await supabase.from('repair_tickets').upsert(db.repairTickets.map(mapRepairToRow));
+            }
+            if (db.maintenanceRecords?.length) {
+              await supabase.from('maintenance_records').upsert(db.maintenanceRecords.map(mapMaintenanceToRow));
+            }
+          } catch (seedErr) {
+            console.warn('Auto-seed to Supabase warning:', seedErr);
           }
+          return localAssets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
 
-        return Array.from(mergedMap.values()).sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
+        if (data.length > 0) {
+          const supabaseAssets = data.map(mapRowToAsset);
+          const mergedMap = new Map<string, Asset>();
+
+          for (const a of localAssets) {
+            mergedMap.set(a.id, a);
+          }
+          for (const sa of supabaseAssets) {
+            const existing = mergedMap.get(sa.id);
+            if (!existing || new Date(sa.updatedAt).getTime() >= new Date(existing.updatedAt).getTime()) {
+              mergedMap.set(sa.id, sa);
+            }
+          }
+
+          return Array.from(mergedMap.values()).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        }
       }
     } catch (e) {
       console.warn('Supabase query failed, falling back to local JSON:', e);
