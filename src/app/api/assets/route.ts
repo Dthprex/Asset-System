@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    // Validation
-    if (!body.name || !body.category || !body.serialNumber || !body.purchaseAmount) {
+    // Validation (Purchase Amount, Purchase Date, Warranty End Date, and Vendor are optional for pre-existing/legacy devices)
+    if (!body.name || !body.category || !body.serialNumber) {
       return NextResponse.json(
-        { success: false, error: 'Name, Category, Serial Number, and Purchase Amount are required' },
+        { success: false, error: 'Device Name, Category, and Serial Number are required' },
         { status: 400 }
       );
     }
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
       hasSim: Boolean(body.hasSim),
       imei1: body.imei1 || '',
       imei2: body.imei2 || '',
-      condition: body.condition || 'Brand New',
-      purchaseDate: body.purchaseDate || new Date().toISOString().slice(0, 10),
+      condition: body.condition || 'Used - Good',
+      purchaseDate: body.purchaseDate !== undefined ? body.purchaseDate : new Date().toISOString().slice(0, 10),
       warrantyEndDate: body.warrantyEndDate || '',
-      purchaseLocation: body.purchaseLocation || 'Colombo Vendor',
+      purchaseLocation: body.purchaseLocation || 'Pre-Existing / Unknown Vendor',
       purchaseAmount: Number(body.purchaseAmount) || 0,
       currency: 'LKR',
       invoiceDoc: body.invoiceDoc || '',

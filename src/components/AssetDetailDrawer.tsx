@@ -26,11 +26,14 @@ import {
   Download,
   ExternalLink,
   Image as ImageIcon,
-  Maximize2
+  Maximize2,
+  Pencil,
+  Save
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Asset, CustodyRecord, MaintenanceRecord, RepairTicket } from '@/types/asset';
+import { Asset, AssetCondition, CustodyRecord, MaintenanceRecord, RepairTicket } from '@/types/asset';
 import { formatLKR, formatDate, getWarrantyInfo, calculateDuration } from '@/lib/utils';
+import { MediaUploadField } from '@/components/MediaUploadField';
 
 interface AssetDetailDrawerProps {
   asset: Asset | null;
@@ -41,6 +44,7 @@ interface AssetDetailDrawerProps {
   onOpenVoucher?: (asset: Asset) => void;
   onDispatchRepair?: (asset: Asset) => void;
   onOpenStickerSheet?: (asset: Asset) => void;
+  onAssetUpdated?: (asset: Asset) => void;
 }
 
 export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
@@ -52,6 +56,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onOpenVoucher,
   onDispatchRepair,
   onOpenStickerSheet,
+  onAssetUpdated,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
@@ -61,13 +66,76 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   const [copiedTag, setCopiedTag] = useState(false);
   const [lightboxDoc, setLightboxDoc] = useState<{ url: string; title: string; subtitle?: string; isPdf?: boolean } | null>(null);
 
+  // Edit mode state for updating legacy/unknown procurement or hardware fields
+  const [isEditing, setIsEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBrand, setEditBrand] = useState('');
+  const [editModelNumber, setEditModelNumber] = useState('');
+  const [editSerialNumber, setEditSerialNumber] = useState('');
+  const [editCondition, setEditCondition] = useState<AssetCondition>('Used - Good');
+  const [editPurchaseAmount, setEditPurchaseAmount] = useState<number | ''>('');
+  const [editPurchaseDate, setEditPurchaseDate] = useState('');
+  const [editWarrantyEndDate, setEditWarrantyEndDate] = useState('');
+  const [editPurchaseLocation, setEditPurchaseLocation] = useState('');
+  const [editInvoiceDoc, setEditInvoiceDoc] = useState('');
+  const [editImages, setEditImages] = useState<string[]>([]);
+
   useEffect(() => {
     if (asset && isOpen) {
+      setIsEditing(false);
+      setEditName(asset.name);
+      setEditBrand(asset.brand);
+      setEditModelNumber(asset.modelNumber || '');
+      setEditSerialNumber(asset.serialNumber);
+      setEditCondition(asset.condition);
+      setEditPurchaseAmount(asset.purchaseAmount || '');
+      setEditPurchaseDate(asset.purchaseDate === '1970-01-01' ? '' : (asset.purchaseDate || ''));
+      setEditWarrantyEndDate(asset.warrantyEndDate === '1970-01-01' ? '' : (asset.warrantyEndDate || ''));
+      setEditPurchaseLocation(asset.purchaseLocation || '');
+      setEditInvoiceDoc(asset.invoiceDoc || '');
+      setEditImages(asset.images || []);
       fetchHistory(asset.id);
       fetchMaintenance(asset.id);
       fetchRepairs(asset.id);
     }
   }, [asset, isOpen]);
+
+  const handleSaveEdit = async () => {
+    if (!asset) return;
+    setSavingEdit(true);
+    try {
+      const updates: Partial<Asset> = {
+        name: editName.trim() || asset.name,
+        brand: editBrand.trim() || asset.brand,
+        modelNumber: editModelNumber.trim(),
+        serialNumber: editSerialNumber.trim() || asset.serialNumber,
+        condition: editCondition,
+        purchaseAmount: Number(editPurchaseAmount) || 0,
+        purchaseDate: editPurchaseDate || '',
+        warrantyEndDate: editWarrantyEndDate || '',
+        purchaseLocation: editPurchaseLocation.trim() || 'Pre-Existing / Unknown Vendor',
+        invoiceDoc: editInvoiceDoc || '',
+        images: editImages.length > 0 ? editImages : asset.images,
+      };
+
+      const res = await fetch(`/api/assets/${asset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+      const data = await res.json();
+      const updatedAsset: Asset = data.success && data.data ? data.data : { ...asset, ...updates, updatedAt: new Date().toISOString() };
+      setIsEditing(false);
+      if (onAssetUpdated) {
+        onAssetUpdated(updatedAsset);
+      }
+    } catch (err) {
+      console.error('Failed to update asset:', err);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
 
   const fetchHistory = async (assetId: string) => {
     setLoadingHistory(true);
@@ -168,12 +236,25 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               </div>
             </div>
 
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer btn-press-sm"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => {
+                  setActiveTab('specs');
+                  setIsEditing((prev) => !prev);
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faece2] border border-[#ead7c7] text-[#c28551] text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer btn-press-sm"
+                title="Edit price, warranty, vendor, or hardware specs"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>{isEditing ? 'Cancel' : 'Edit'}</span>
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer btn-press-sm"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Tab Selector */}
@@ -394,75 +475,243 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
             {/* TAB 2: SPECS & PROCUREMENT */}
             {activeTab === 'specs' && (
               <div className="space-y-6 text-xs">
-                
-                {/* Financial Summary */}
-                <div className="p-4 rounded-2xl bg-[#fbf5ef] border border-[#ead7c7] space-y-3">
-                  <h4 className="font-bold text-[#1d2939] text-xs">Procurement Record (LKR)</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Purchase Price:</span>
-                      <span className="font-bold text-[#c28551] text-base">{formatLKR(asset.purchaseAmount)}</span>
+                {isEditing ? (
+                  <div className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#c28551] space-y-4">
+                    <div className="flex items-center justify-between border-b border-[#f0e6de] pb-2.5">
+                      <div>
+                        <h4 className="font-bold text-[#1d2939] text-xs">Edit Hardware & Procurement Details</h4>
+                        <p className="text-[11px] text-slate-500">Update missing price, warranty expiry date, vendor, or invoice anytime</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="text-[11px] text-slate-500 hover:text-slate-800 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Purchase Date:</span>
-                      <span className="font-semibold text-slate-800">{formatDate(asset.purchaseDate)}</span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Device Name</label>
+                        <input
+                          type="text"
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Serial Number</label>
+                        <input
+                          type="text"
+                          value={editSerialNumber}
+                          onChange={(e) => setEditSerialNumber(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] font-mono text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Brand</label>
+                        <input
+                          type="text"
+                          value={editBrand}
+                          onChange={(e) => setEditBrand(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Model Number</label>
+                        <input
+                          type="text"
+                          value={editModelNumber}
+                          onChange={(e) => setEditModelNumber(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Purchase Price (LKR)</label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1000"
+                          value={editPurchaseAmount}
+                          onChange={(e) => setEditPurchaseAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                          placeholder="Leave blank if unknown (Rs. 0)"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Vendor / Purchase Location</label>
+                        <input
+                          type="text"
+                          value={editPurchaseLocation}
+                          onChange={(e) => setEditPurchaseLocation(e.target.value)}
+                          placeholder="Pre-Existing / Unknown Vendor"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-700">Purchase Date</label>
+                          {editPurchaseDate && (
+                            <button
+                              type="button"
+                              onClick={() => setEditPurchaseDate('')}
+                              className="text-[10px] text-[#c28551] hover:underline cursor-pointer"
+                            >
+                              Mark Unknown
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="date"
+                          value={editPurchaseDate}
+                          onChange={(e) => setEditPurchaseDate(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-700">Warranty Expiry Date</label>
+                          {editWarrantyEndDate && (
+                            <button
+                              type="button"
+                              onClick={() => setEditWarrantyEndDate('')}
+                              className="text-[10px] text-[#c28551] hover:underline cursor-pointer"
+                            >
+                              Mark Unknown
+                            </button>
+                          )}
+                        </div>
+                        <input
+                          type="date"
+                          value={editWarrantyEndDate}
+                          onChange={(e) => setEditWarrantyEndDate(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Vendor / Store:</span>
-                      <span className="font-semibold text-slate-800">{asset.purchaseLocation}</span>
+
+                    <div className="pt-2 border-t border-[#f0e6de] space-y-3">
+                      <MediaUploadField
+                        label="Device Photos"
+                        multiple={true}
+                        accept="image/*"
+                        values={editImages}
+                        onChange={setEditImages}
+                        maxFiles={6}
+                      />
+                      <MediaUploadField
+                        label="Purchase Invoice / Receipt (Optional)"
+                        multiple={false}
+                        accept="image/*,application/pdf"
+                        values={editInvoiceDoc ? [editInvoiceDoc] : []}
+                        onChange={(urls) => setEditInvoiceDoc(urls[0] || '')}
+                      />
                     </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Warranty Status:</span>
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${warranty.badgeClass}`}>
-                        {warranty.statusText}
-                      </span>
+
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsEditing(false)}
+                        className="px-3.5 py-2 rounded-xl border border-slate-300 text-slate-700 hover:bg-white text-xs font-semibold cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={savingEdit}
+                        onClick={handleSaveEdit}
+                        className="px-4 py-2 rounded-xl bg-[#c28551] hover:bg-[#a66c3b] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Save className="w-3.5 h-3.5" />
+                        <span>{savingEdit ? 'Saving...' : 'Save Changes'}</span>
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* Hardware Properties */}
-                <div className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] space-y-3">
-                  <h4 className="font-bold text-[#1d2939] text-xs">Technical Identifiers</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Brand:</span>
-                      <span className="font-semibold text-slate-800">{asset.brand}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Model:</span>
-                      <span className="font-semibold text-slate-800">{asset.modelNumber || 'Standard'}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Serial Number:</span>
-                      <span className="font-mono font-semibold text-[#1d2939]">{asset.serialNumber}</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block text-[11px]">Condition at Intake:</span>
-                      <span className="font-semibold text-slate-800">{asset.condition}</span>
-                    </div>
-                  </div>
-
-                  {/* Cellular Dual SIM info */}
-                  {asset.hasSim && (
-                    <div className="pt-3 border-t border-[#f0e6de]">
-                      <div className="flex items-center gap-1.5 font-bold text-[#1d2939] mb-2">
-                        <Smartphone className="w-3.5 h-3.5 text-[#c28551]" />
-                        <span>Cellular Tracking (Dual SIM IMEIs)</span>
+                ) : (
+                  <>
+                    {/* Financial Summary */}
+                    <div className="p-4 rounded-2xl bg-[#fbf5ef] border border-[#ead7c7] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-bold text-[#1d2939] text-xs">Procurement Record (LKR)</h4>
+                        <button
+                          type="button"
+                          onClick={() => setIsEditing(true)}
+                          className="text-[11px] font-semibold text-[#c28551] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          <span>Update Info</span>
+                        </button>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-                        <div className="p-2.5 rounded-xl bg-white border border-[#f0e6de]">
-                          <span className="text-[10px] text-slate-400 block">SLOT 1 IMEI</span>
-                          <span className="text-[#1d2939]">{asset.imei1 || 'Not specified'}</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Purchase Price:</span>
+                          <span className="font-bold text-[#c28551] text-base">
+                            {asset.purchaseAmount > 0 ? formatLKR(asset.purchaseAmount) : 'Unrecorded (Legacy)'}
+                          </span>
                         </div>
-                        <div className="p-2.5 rounded-xl bg-white border border-[#f0e6de]">
-                          <span className="text-[10px] text-slate-400 block">SLOT 2 IMEI</span>
-                          <span className="text-[#1d2939]">{asset.imei2 || 'Not specified'}</span>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Purchase Date:</span>
+                          <span className="font-semibold text-slate-800">{formatDate(asset.purchaseDate)}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Vendor / Store:</span>
+                          <span className="font-semibold text-slate-800">{asset.purchaseLocation || 'Pre-Existing / Unknown Vendor'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Warranty Status:</span>
+                          <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold ${warranty.badgeClass}`}>
+                            {warranty.statusText}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
 
+                    {/* Hardware Properties */}
+                    <div className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#f0e6de] space-y-3">
+                      <h4 className="font-bold text-[#1d2939] text-xs">Technical Identifiers</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Brand:</span>
+                          <span className="font-semibold text-slate-800">{asset.brand}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Model:</span>
+                          <span className="font-semibold text-slate-800">{asset.modelNumber || 'Standard'}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Serial Number:</span>
+                          <span className="font-mono font-semibold text-[#1d2939]">{asset.serialNumber}</span>
+                        </div>
+                        <div>
+                          <span className="text-slate-500 block text-[11px]">Condition at Intake:</span>
+                          <span className="font-semibold text-slate-800">{asset.condition}</span>
+                        </div>
+                      </div>
+
+                      {/* Cellular Dual SIM info */}
+                      {asset.hasSim && (
+                        <div className="pt-3 border-t border-[#f0e6de]">
+                          <div className="flex items-center gap-1.5 font-bold text-[#1d2939] mb-2">
+                            <Smartphone className="w-3.5 h-3.5 text-[#c28551]" />
+                            <span>Cellular Tracking (Dual SIM IMEIs)</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
+                            <div className="p-2.5 rounded-xl bg-white border border-[#f0e6de]">
+                              <span className="text-[10px] text-slate-400 block">SLOT 1 IMEI</span>
+                              <span className="text-[#1d2939]">{asset.imei1 || 'Not specified'}</span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-white border border-[#f0e6de]">
+                              <span className="text-[10px] text-slate-400 block">SLOT 2 IMEI</span>
+                              <span className="text-[#1d2939]">{asset.imei2 || 'Not specified'}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 

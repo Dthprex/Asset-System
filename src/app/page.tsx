@@ -189,7 +189,9 @@ function DashboardContent() {
                   <span className="text-slate-500 truncate">
                     {asset.currentAssignment ? asset.currentAssignment.locationOrBranch : 'Ready in IT Lab'}
                   </span>
-                  <span className="font-bold text-[#c28551]">{formatLKR(asset.purchaseAmount)}</span>
+                  <span className="font-bold text-[#c28551]">
+                    {asset.purchaseAmount > 0 ? formatLKR(asset.purchaseAmount) : 'Unrecorded'}
+                  </span>
                 </div>
               </div>
             ))}

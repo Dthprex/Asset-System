@@ -25,7 +25,9 @@ export function formatLKR(amount: number): string {
  * Format date in Asia/Colombo (Sri Lanka) Timezone
  */
 export function formatDate(dateString: string | Date | undefined): string {
-  if (!dateString) return 'N/A';
+  if (!dateString || dateString === '1970-01-01' || dateString === 'UNKNOWN') {
+    return 'Unknown (Legacy)';
+  }
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return String(dateString);
@@ -44,7 +46,7 @@ export function formatDate(dateString: string | Date | undefined): string {
  * Format datetime with time in Asia/Colombo Timezone
  */
 export function formatDateTime(dateString: string | Date | undefined): string {
-  if (!dateString) return 'N/A';
+  if (!dateString || dateString === '1970-01-01' || dateString === 'UNKNOWN') return 'Unknown';
   try {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return String(dateString);
@@ -65,7 +67,7 @@ export function formatDateTime(dateString: string | Date | undefined): string {
  * Calculate custody duration between two dates in human readable form
  */
 export function calculateDuration(startDate: string, endDate?: string, referenceDate?: Date): string {
-  if (!startDate) return '0 days';
+  if (!startDate || startDate === '1970-01-01') return 'N/A';
   const start = new Date(startDate);
   const end = endDate ? new Date(endDate) : (referenceDate || (typeof window !== 'undefined' ? new Date() : start));
   
@@ -96,12 +98,12 @@ export function getWarrantyInfo(warrantyEndDate: string, referenceDate?: Date): 
   badgeClass: string;
   dotClass: string;
 } {
-  if (!warrantyEndDate) {
+  if (!warrantyEndDate || warrantyEndDate === '1970-01-01' || warrantyEndDate === 'UNKNOWN') {
     return {
       daysLeft: 0,
-      isExpired: true,
-      statusText: 'No Warranty Date',
-      badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200',
+      isExpired: false,
+      statusText: 'Unknown / Pre-Audit',
+      badgeClass: 'bg-slate-100 text-slate-600 border border-slate-200',
       dotClass: 'bg-slate-400',
     };
   }

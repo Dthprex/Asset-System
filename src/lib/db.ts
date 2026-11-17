@@ -22,8 +22,8 @@ function mapRowToAsset(row: any): Asset {
     imei1: row.imei1 || undefined,
     imei2: row.imei2 || undefined,
     condition: row.condition,
-    purchaseDate: row.purchase_date,
-    warrantyEndDate: row.warranty_end_date,
+    purchaseDate: row.purchase_date === '1970-01-01' ? '' : (row.purchase_date || ''),
+    warrantyEndDate: row.warranty_end_date === '1970-01-01' ? '' : (row.warranty_end_date || ''),
     purchaseLocation: row.purchase_location,
     purchaseAmount: Number(row.purchase_amount) || 0,
     currency: row.currency || 'LKR',
@@ -37,8 +37,8 @@ function mapRowToAsset(row: any): Asset {
 }
 
 function mapAssetToRow(asset: Asset): any {
-  const today = new Date().toISOString().slice(0, 10);
-  const defaultWarranty = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const hasPurchaseDate = asset.purchaseDate && asset.purchaseDate.trim() && asset.purchaseDate !== 'UNKNOWN';
+  const hasWarrantyDate = asset.warrantyEndDate && asset.warrantyEndDate.trim() && asset.warrantyEndDate !== 'UNKNOWN';
   return {
     id: asset.id,
     asset_tag: asset.assetTag,
@@ -51,9 +51,9 @@ function mapAssetToRow(asset: Asset): any {
     imei1: asset.imei1 || null,
     imei2: asset.imei2 || null,
     condition: asset.condition,
-    purchase_date: asset.purchaseDate && asset.purchaseDate.trim() ? asset.purchaseDate : today,
-    warranty_end_date: asset.warrantyEndDate && asset.warrantyEndDate.trim() ? asset.warrantyEndDate : defaultWarranty,
-    purchase_location: asset.purchaseLocation || 'Colombo Vendor',
+    purchase_date: hasPurchaseDate ? asset.purchaseDate : '1970-01-01',
+    warranty_end_date: hasWarrantyDate ? asset.warrantyEndDate : '1970-01-01',
+    purchase_location: asset.purchaseLocation || 'Pre-Existing / Unknown Vendor',
     purchase_amount: Number(asset.purchaseAmount) || 0,
     currency: asset.currency || 'LKR',
     invoice_doc: asset.invoiceDoc || null,
@@ -368,17 +368,22 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
   db.assets.unshift(newAsset);
 
   // Record initial intake in custody history
+  const isLegacyIntake = !newAsset.purchaseAmount || newAsset.purchaseAmount <= 0 || !newAsset.purchaseDate;
   const intakeHistory: CustodyRecord = {
     id: `HIS-${Date.now().toString().slice(-6)}`,
     assetId: newId,
     action: 'PURCHASED',
-    date: newAsset.purchaseDate || now.slice(0, 10),
+    date: newAsset.purchaseDate && newAsset.purchaseDate !== '1970-01-01' ? newAsset.purchaseDate : now.slice(0, 10),
     performedBy: 'IT Asset Admin',
-    previousHolder: `Vendor (${newAsset.purchaseLocation || 'Supplier'})`,
+    previousHolder: isLegacyIntake
+      ? 'Pre-Existing Company Fleet'
+      : `Vendor (${newAsset.purchaseLocation || 'Supplier'})`,
     newHolder: 'cosmetics.lk IT Central Inventory',
     assignmentType: 'INVENTORY_INTAKE',
     conditionUponReturn: newAsset.condition,
-    notes: `Initial intake purchase at ${newAsset.purchaseLocation || 'Vendor'} for Rs. ${newAsset.purchaseAmount.toLocaleString()} LKR.`,
+    notes: isLegacyIntake
+      ? `Onboarded pre-existing / legacy hardware into central inventory (${newAsset.purchaseLocation || 'Unknown Vendor'}).${newAsset.purchaseAmount > 0 ? ` Estimated value: Rs. ${newAsset.purchaseAmount.toLocaleString()} LKR.` : ' Original purchase price/date unrecorded.'}`
+      : `Initial intake purchase at ${newAsset.purchaseLocation || 'Vendor'} for Rs. ${newAsset.purchaseAmount.toLocaleString()} LKR.`,
   };
 
   db.custodyHistory.unshift(intakeHistory);
@@ -390,12 +395,15 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
       id: `HIS-${(Date.now() + 1).toString().slice(-6)}`,
       assetId: newId,
       action: 'ASSIGNED',
-      date: newAsset.currentAssignment.assignedDate || now.slice(0, 10),
+      date:
+        newAsset.currentAssignment.assignedDate && newAsset.currentAssignment.assignedDate !== '1970-01-01'
+          ? newAsset.currentAssignment.assignedDate
+          : now.slice(0, 10),
       performedBy: 'IT Asset Admin',
       previousHolder: 'cosmetics.lk IT Central Inventory',
       newHolder: `${newAsset.currentAssignment.assignedToName} (${newAsset.currentAssignment.locationOrBranch})`,
       assignmentType: newAsset.currentAssignment.assignmentType,
-      notes: newAsset.currentAssignment.purpose || 'Initial deployment assignment upon purchase.',
+      notes: newAsset.currentAssignment.purpose || 'Initial deployment assignment upon intake.',
     };
     db.custodyHistory.unshift(assignHistory);
   }
@@ -448,13 +456,15 @@ export async function updateAsset(id: string, updates: Partial<Asset>): Promise<
 
   if (index !== -1) {
     db.assets[index] = updatedAsset;
-    await writeDatabase(db);
+  } else {
+    db.assets.unshift(updatedAsset);
   }
+  await writeDatabase(db);
 
   const supabase = getSupabase();
   if (supabase) {
     try {
-      await supabase.from('assets').update(mapAssetToRow(updatedAsset)).eq('id', updatedAsset.id);
+      await supabase.from('assets').upsert(mapAssetToRow(updatedAsset));
     } catch (e) {
       console.warn('Supabase sync updateAsset failed:', e);
     }
@@ -743,13 +753,13 @@ export async function getSystemStats() {
   const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
   const expiringWarrantyCount = assets.filter((a) => {
-    if (!a.warrantyEndDate) return false;
+    if (!a.warrantyEndDate || a.warrantyEndDate === '1970-01-01' || a.warrantyEndDate === 'UNKNOWN') return false;
     const wDate = new Date(a.warrantyEndDate);
     return wDate >= today && wDate <= in30Days;
   }).length;
 
   const expiredWarrantyCount = assets.filter((a) => {
-    if (!a.warrantyEndDate) return false;
+    if (!a.warrantyEndDate || a.warrantyEndDate === '1970-01-01' || a.warrantyEndDate === 'UNKNOWN') return false;
     const wDate = new Date(a.warrantyEndDate);
     return wDate < today;
   }).length;

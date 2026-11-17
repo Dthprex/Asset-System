@@ -300,7 +300,11 @@ function InventoryContent() {
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap font-bold text-[#1d2939]">
-                      {formatLKR(asset.purchaseAmount)}
+                      {asset.purchaseAmount > 0 ? (
+                        formatLKR(asset.purchaseAmount)
+                      ) : (
+                        <span className="text-slate-400 font-medium text-[11px]">Unrecorded</span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap">
@@ -394,7 +398,9 @@ function InventoryContent() {
 
                   <div className="text-right">
                     <div className="text-[10px] text-slate-400">Price (LKR)</div>
-                    <div className="font-bold text-[#c28551] text-[11px]">{formatLKR(asset.purchaseAmount)}</div>
+                    <div className="font-bold text-[#c28551] text-[11px]">
+                      {asset.purchaseAmount > 0 ? formatLKR(asset.purchaseAmount) : 'Unrecorded'}
+                    </div>
                   </div>
                 </div>
               </div>

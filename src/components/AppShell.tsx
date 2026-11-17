@@ -288,6 +288,18 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     loadData();
   };
 
+  const handleAssetUpdated = (updated: Asset) => {
+    saveLocalAsset(updated);
+    setActiveAsset(updated);
+    setAssets((prev) => {
+      const next = prev.map((a) => (a.id === updated.id ? updated : a));
+      setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
+      return next;
+    });
+    showToast(`Updated details for ${updated.name} (${updated.assetTag})!`);
+    loadData();
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -389,6 +401,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onOpenVoucher={(asset) => openHandoverVoucher(asset)}
           onDispatchRepair={(asset) => openNewRepair(asset)}
           onOpenStickerSheet={(asset) => openStickerSheet([asset])}
+          onAssetUpdated={handleAssetUpdated}
         />
 
         <NewRepairTicketModal

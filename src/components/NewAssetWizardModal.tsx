@@ -56,11 +56,12 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
   const [condition, setCondition] = useState<AssetCondition>('Brand New');
   
   // Procurement
+  const [isLegacyDevice, setIsLegacyDevice] = useState(false);
   const [purchaseDate, setPurchaseDate] = useState('');
   const [warrantyEndDate, setWarrantyEndDate] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isLegacyDevice) {
       if (!purchaseDate) {
         setPurchaseDate(new Date().toISOString().slice(0, 10));
       }
@@ -70,7 +71,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
         setWarrantyEndDate(nextYear.toISOString().slice(0, 10));
       }
     }
-  }, [isOpen, purchaseDate, warrantyEndDate]);
+  }, [isOpen, isLegacyDevice, purchaseDate, warrantyEndDate]);
 
   const [purchaseLocation, setPurchaseLocation] = useState('Future World Colombo 03');
   const [purchaseAmount, setPurchaseAmount] = useState<number | ''>(150000);
@@ -79,6 +80,29 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80'
   ]);
   const [invoiceDoc, setInvoiceDoc] = useState<string>('/uploads/sample-invoice-macbook.svg');
+
+  const handleToggleLegacy = (checked: boolean) => {
+    setIsLegacyDevice(checked);
+    setError(null);
+    if (checked) {
+      if (condition === 'Brand New') {
+        setCondition('Used - Good');
+      }
+      setPurchaseLocation('Pre-Existing / Unknown Vendor');
+      setPurchaseAmount('');
+      setPurchaseDate('');
+      setWarrantyEndDate('');
+      setInvoiceDoc('');
+    } else {
+      setPurchaseLocation('Future World Colombo 03');
+      setPurchaseAmount(150000);
+      setPurchaseDate(new Date().toISOString().slice(0, 10));
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 2);
+      setWarrantyEndDate(nextYear.toISOString().slice(0, 10));
+      setInvoiceDoc('/uploads/sample-invoice-macbook.svg');
+    }
+  };
 
   // Deployment
   const [assignImmediately, setAssignImmediately] = useState(false);
@@ -113,8 +137,8 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
   };
 
   const validateStep2 = () => {
-    if (!purchaseAmount || Number(purchaseAmount) <= 0) {
-      setError('Please enter a valid purchase price in LKR');
+    if (!isLegacyDevice && (!purchaseAmount || Number(purchaseAmount) <= 0)) {
+      setError('Please enter a valid purchase price in LKR, or enable "Pre-Existing / Legacy Device" if unknown');
       return false;
     }
     setError(null);
@@ -132,8 +156,13 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     setImei1('');
     setImei2('');
     setCondition('Brand New');
+    setIsLegacyDevice(false);
     setPurchaseLocation('Future World Colombo 03');
     setPurchaseAmount(150000);
+    setPurchaseDate(new Date().toISOString().slice(0, 10));
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 2);
+    setWarrantyEndDate(nextYear.toISOString().slice(0, 10));
     setImages(['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80']);
     setInvoiceDoc('/uploads/sample-invoice-macbook.svg');
     setAssignImmediately(false);
@@ -161,12 +190,17 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
         imei1: hasSim ? imei1 : '',
         imei2: hasSim ? imei2 : '',
         condition,
-        purchaseDate: purchaseDate || new Date().toISOString().slice(0, 10),
-        warrantyEndDate:
-          warrantyEndDate ||
-          new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-        purchaseLocation: purchaseLocation || 'Colombo Vendor',
-        purchaseAmount: Number(purchaseAmount),
+        purchaseDate: isLegacyDevice
+          ? purchaseDate || ''
+          : purchaseDate || new Date().toISOString().slice(0, 10),
+        warrantyEndDate: isLegacyDevice
+          ? warrantyEndDate || ''
+          : warrantyEndDate ||
+            new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        purchaseLocation:
+          purchaseLocation.trim() ||
+          (isLegacyDevice ? 'Pre-Existing / Unknown Vendor' : 'Colombo Vendor'),
+        purchaseAmount: Number(purchaseAmount) || 0,
         images: images.length > 0 ? images : [imageUrl],
         invoiceDoc: invoiceDoc || '',
       };
@@ -409,36 +443,94 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
           {/* STEP 2: PROCUREMENT & FINANCIALS */}
           {step === 2 && (
             <div className="space-y-4">
+              {/* Pre-Existing / Legacy Device Toggle Card */}
+              <div
+                className={`p-4 rounded-2xl border transition ${
+                  isLegacyDevice
+                    ? 'bg-[#fbf5ef] border-[#c28551] shadow-2xs'
+                    : 'bg-[#fdfbf9] border-[#f0e6de]'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-[#1d2939]">
+                        Pre-Existing / Legacy Device (Unknown Purchase Details)
+                      </span>
+                      {isLegacyDevice && (
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#c28551] text-white">
+                          Legacy Mode Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Turn this on for existing company devices bought before your role where the price, vendor, purchase date, or warranty date is unknown.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={isLegacyDevice}
+                      onChange={(e) => handleToggleLegacy(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#c28551]"></div>
+                  </label>
+                </div>
+
+                {isLegacyDevice && (
+                  <div className="mt-3 pt-2.5 border-t border-[#ead7c7] text-[11px] text-slate-600 flex items-start gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-[#c28551] shrink-0 mt-0.5" />
+                    <span>
+                      All fields below are now <strong>optional</strong>. Leave unknown fields blank—you can always look up warranty coverage by Serial Number later and edit this device anytime.
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Purchase Price in LKR <span className="text-[#c28551]">*</span>
+                    {isLegacyDevice ? 'Estimated Value in LKR (Optional)' : 'Purchase Price in LKR'}{' '}
+                    {!isLegacyDevice && <span className="text-[#c28551]">*</span>}
                   </label>
                   <div className="relative">
                     <input
                       type="number"
-                      required
+                      required={!isLegacyDevice}
                       min="0"
                       step="1000"
                       value={purchaseAmount}
                       onChange={(e) => setPurchaseAmount(e.target.value === '' ? '' : Number(e.target.value))}
-                      placeholder="e.g. 195000"
+                      placeholder={isLegacyDevice ? 'Leave blank if unknown (Rs. 0)' : 'e.g. 195000'}
                       className="w-full pl-3 pr-24 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#f0e6de] text-[#1d2939] text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
                     />
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-xs font-bold text-[#c28551]">
-                      {formatLKR(Number(purchaseAmount) || 0)}
+                      {purchaseAmount === '' && isLegacyDevice ? 'Unrecorded' : formatLKR(Number(purchaseAmount) || 0)}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Purchase Date <span className="text-[#c28551]">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Purchase Date {!isLegacyDevice && <span className="text-[#c28551]">*</span>}
+                      {isLegacyDevice && <span className="text-[10px] font-normal text-slate-400"> (Optional)</span>}
+                    </label>
+                    {purchaseDate && isLegacyDevice && (
+                      <button
+                        type="button"
+                        onClick={() => setPurchaseDate('')}
+                        className="text-[10px] text-[#c28551] hover:underline cursor-pointer"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="date"
-                    required
+                    required={!isLegacyDevice}
                     value={purchaseDate}
                     onChange={(e) => setPurchaseDate(e.target.value)}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#f0e6de] text-[#1d2939] text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
@@ -446,9 +538,21 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Warranty Expiry Date
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Warranty Expiry Date
+                      <span className="text-[10px] font-normal text-slate-400"> (Optional)</span>
+                    </label>
+                    {warrantyEndDate && (
+                      <button
+                        type="button"
+                        onClick={() => setWarrantyEndDate('')}
+                        className="text-[10px] text-[#c28551] hover:underline cursor-pointer"
+                      >
+                        Mark Unknown
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="date"
                     value={warrantyEndDate}
@@ -465,7 +569,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                     type="text"
                     value={purchaseLocation}
                     onChange={(e) => setPurchaseLocation(e.target.value)}
-                    placeholder="e.g. Future World, CameraLK, Singer"
+                    placeholder={isLegacyDevice ? 'Pre-Existing / Unknown Vendor' : 'e.g. Future World, CameraLK, Singer'}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#f0e6de] text-[#1d2939] text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
                   />
                 </div>
@@ -474,7 +578,14 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
 
               {/* Vendor suggestions */}
               <div className="flex flex-wrap gap-1.5 items-center pt-1">
-                <span className="text-[11px] text-slate-400 mr-1">Frequent Vendors:</span>
+                <span className="text-[11px] text-slate-400 mr-1">Quick Select Vendor:</span>
+                <button
+                  type="button"
+                  onClick={() => setPurchaseLocation('Pre-Existing / Unknown Vendor')}
+                  className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-[#faece2] hover:text-[#c28551] border border-slate-300 text-[10px] font-semibold text-slate-700 transition cursor-pointer"
+                >
+                  Pre-Existing / Unknown Vendor
+                </button>
                 {COMMON_VENDORS.map((v) => (
                   <button
                     key={v}
@@ -490,8 +601,12 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
               {/* Media & Invoices Upload Dropzones */}
               <div className="pt-2 border-t border-[#f0e6de] space-y-4">
                 <MediaUploadField
-                  label="Purchased Item Photos"
-                  sublabel="Upload photos of the purchased hardware (unboxed item, serial barcode sticker, ports)"
+                  label={isLegacyDevice ? 'Device & Serial Sticker Photos' : 'Purchased Item Photos'}
+                  sublabel={
+                    isLegacyDevice
+                      ? 'Upload photos of the existing device and its back serial barcode sticker for baseline audit proof'
+                      : 'Upload photos of the purchased hardware (unboxed item, serial barcode sticker, ports)'
+                  }
                   multiple={true}
                   accept="image/*"
                   values={images}
@@ -504,8 +619,12 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                 />
 
                 <MediaUploadField
-                  label="Official Purchase Invoice / Bill Document"
-                  sublabel="Upload vendor tax invoice, delivery bill, or store purchase receipt (PNG, JPG, or PDF)"
+                  label="Official Purchase Invoice / Bill Document (Optional)"
+                  sublabel={
+                    isLegacyDevice
+                      ? 'Skip if original invoice is missing—you can attach it later if found'
+                      : 'Upload vendor tax invoice, delivery bill, or store purchase receipt (PNG, JPG, or PDF)'
+                  }
                   multiple={false}
                   accept="image/*,application/pdf"
                   values={invoiceDoc ? [invoiceDoc] : []}
