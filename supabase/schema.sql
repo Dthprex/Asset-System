@@ -134,11 +134,13 @@ VALUES ('cosmetics-assets-vault', 'cosmetics-assets-vault', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Public Storage Read Policy
+DROP POLICY IF EXISTS "Public Access to Asset Invoices and Photos" ON storage.objects;
 CREATE POLICY "Public Access to Asset Invoices and Photos" 
 ON storage.objects FOR SELECT 
 USING (bucket_id = 'cosmetics-assets-vault');
 
 -- Authenticated / Service Role Upload Policy
+DROP POLICY IF EXISTS "Allow Uploads to Asset Vault" ON storage.objects;
 CREATE POLICY "Allow Uploads to Asset Vault" 
 ON storage.objects FOR INSERT 
 WITH CHECK (bucket_id = 'cosmetics-assets-vault');
@@ -152,17 +154,40 @@ ALTER TABLE repair_tickets ENABLE ROW LEVEL SECURITY;
 ALTER TABLE maintenance_records ENABLE ROW LEVEL SECURITY;
 
 -- Allow Public/Anon Read for internal staff portal
+DROP POLICY IF EXISTS "Allow read branches" ON branches;
 CREATE POLICY "Allow read branches" ON branches FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow read departments" ON departments;
 CREATE POLICY "Allow read departments" ON departments FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow read assets" ON assets;
 CREATE POLICY "Allow read assets" ON assets FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow read custody" ON custody_history;
 CREATE POLICY "Allow read custody" ON custody_history FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow read repairs" ON repair_tickets;
 CREATE POLICY "Allow read repairs" ON repair_tickets FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow read maintenance" ON maintenance_records;
 CREATE POLICY "Allow read maintenance" ON maintenance_records FOR SELECT USING (true);
 
 -- Allow Full Access via Service Role or Authenticated Users
-CREATE POLICY "Allow full access branches" ON branches FOR ALL USING (true);
-CREATE POLICY "Allow full access departments" ON departments FOR ALL USING (true);
-CREATE POLICY "Allow full access assets" ON assets FOR ALL USING (true);
-CREATE POLICY "Allow full access custody" ON custody_history FOR ALL USING (true);
-CREATE POLICY "Allow full access repairs" ON repair_tickets FOR ALL USING (true);
-CREATE POLICY "Allow full access maintenance" ON maintenance_records FOR ALL USING (true);
+DROP POLICY IF EXISTS "Allow full access branches" ON branches;
+CREATE POLICY "Allow full access branches" ON branches FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access departments" ON departments;
+CREATE POLICY "Allow full access departments" ON departments FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access assets" ON assets;
+CREATE POLICY "Allow full access assets" ON assets FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access custody" ON custody_history;
+CREATE POLICY "Allow full access custody" ON custody_history FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access repairs" ON repair_tickets;
+CREATE POLICY "Allow full access repairs" ON repair_tickets FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow full access maintenance" ON maintenance_records;
+CREATE POLICY "Allow full access maintenance" ON maintenance_records FOR ALL USING (true) WITH CHECK (true);
+
