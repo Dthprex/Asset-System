@@ -6,7 +6,8 @@ import {
   Plus, 
   RefreshCw,
   Scan,
-  Receipt
+  Receipt,
+  Database
 } from 'lucide-react';
 
 interface TopNavProps {
@@ -18,6 +19,11 @@ interface TopNavProps {
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
   sidebarCollapsed?: boolean;
+  dbStatus?: {
+    connected: boolean;
+    mode: 'SUPABASE_CLOUD' | 'FALLBACK_LOCAL';
+    message: string;
+  };
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -29,6 +35,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   searchQuery = '',
   onSearchChange,
   sidebarCollapsed = false,
+  dbStatus,
 }) => {
   const [colomboTime, setColomboTime] = useState<string>('');
 
@@ -77,8 +84,28 @@ export const TopNav: React.FC<TopNavProps> = ({
       {/* Right Controls */}
       <div className="flex items-center gap-2.5 sm:gap-3">
         
+        {/* Live Database Status Pill */}
+        {dbStatus && (
+          <div
+            title={dbStatus.message}
+            className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[11px] font-semibold shadow-2xs cursor-help ${
+              dbStatus.connected
+                ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800'
+                : 'bg-amber-50/90 border-amber-200 text-amber-800'
+            }`}
+          >
+            <span
+              className={`w-2 h-2 rounded-full ${
+                dbStatus.connected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            <Database className="w-3.5 h-3.5" />
+            <span>{dbStatus.connected ? 'Supabase Cloud' : 'Fallback Mode'}</span>
+          </div>
+        )}
+
         {/* Asia/Colombo Live Clock */}
-        <div className="hidden lg:flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass-pill text-xs shadow-2xs">
+        <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-xl glass-pill text-xs shadow-2xs">
           <span className="w-2 h-2 rounded-full bg-[#c28551] animate-pulse"></span>
           <span className="font-bold text-[#c28551]">Colombo:</span>
           <span className="font-mono text-[#1d2939] font-semibold">{colomboTime || 'Syncing...'}</span>

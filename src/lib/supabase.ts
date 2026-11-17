@@ -7,7 +7,14 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 let cachedClient: SupabaseClient | null = null;
 
 export function isSupabaseConfigured(): boolean {
-  return Boolean(supabaseUrl && (supabaseServiceKey || supabaseAnonKey));
+  if (!supabaseUrl || supabaseUrl.includes('your-project-id') || !supabaseUrl.startsWith('http')) {
+    return false;
+  }
+  const key = supabaseServiceKey || supabaseAnonKey;
+  if (!key || key.includes('your-supabase-') || key.includes('your-service-role')) {
+    return false;
+  }
+  return true;
 }
 
 export function getSupabase(): SupabaseClient | null {

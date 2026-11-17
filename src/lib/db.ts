@@ -764,6 +764,42 @@ export async function getSystemStats() {
     return wDate < today;
   }).length;
 
+  let dbStatus: {
+    connected: boolean;
+    mode: 'SUPABASE_CLOUD' | 'FALLBACK_LOCAL';
+    message: string;
+  } = {
+    connected: false,
+    mode: 'FALLBACK_LOCAL',
+    message: 'Supabase env vars not set in Vercel — using Fallback Mode',
+  };
+
+  const supabase = getSupabase();
+  if (supabase && isSupabaseConfigured()) {
+    try {
+      const { error } = await supabase.from('assets').select('id', { head: true, count: 'exact' });
+      if (!error) {
+        dbStatus = {
+          connected: true,
+          mode: 'SUPABASE_CLOUD',
+          message: 'Supabase Cloud PostgreSQL & Vault Connected',
+        };
+      } else {
+        dbStatus = {
+          connected: false,
+          mode: 'FALLBACK_LOCAL',
+          message: `Supabase reachable, but schema error: ${error.message}`,
+        };
+      }
+    } catch (e: any) {
+      dbStatus = {
+        connected: false,
+        mode: 'FALLBACK_LOCAL',
+        message: `Supabase connection error: ${e?.message || 'Unknown error'}`,
+      };
+    }
+  }
+
   return {
     totalAssets,
     totalValueLKR,
@@ -776,6 +812,7 @@ export async function getSystemStats() {
     totalBranches: db.branches.length,
     totalDepartments: db.departments.length,
     recentHistory: db.custodyHistory.slice(0, 8),
+    dbStatus,
   };
 }
 

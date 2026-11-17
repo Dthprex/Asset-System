@@ -349,6 +349,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             sidebarCollapsed={sidebarCollapsed}
+            dbStatus={stats.dbStatus}
           />
 
           {/* Toast Notification */}
