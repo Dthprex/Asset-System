@@ -7,13 +7,17 @@ import {
   RefreshCw,
   Scan,
   Receipt,
-  Database
+  Database,
+  KeyRound,
+  Lock
 } from 'lucide-react';
 
 interface TopNavProps {
   onOpenNewAssetModal: () => void;
   onOpenScanner?: () => void;
   onOpenInvoices?: () => void;
+  onOpenSecuritySettings?: () => void;
+  onLockPortal?: () => void;
   onRefresh?: () => void;
   isRefreshing?: boolean;
   searchQuery?: string;
@@ -30,6 +34,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenNewAssetModal,
   onOpenScanner,
   onOpenInvoices,
+  onOpenSecuritySettings,
+  onLockPortal,
   onRefresh,
   isRefreshing = false,
   searchQuery = '',
@@ -120,6 +126,28 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-[#1d2939] hover:bg-[#faf7f3] transition disabled:opacity-50 cursor-pointer btn-press-sm"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#c28551]' : ''}`} />
+          </button>
+        )}
+
+        {/* Password & Security Settings Button */}
+        {onOpenSecuritySettings && (
+          <button
+            onClick={onOpenSecuritySettings}
+            title="Password & Recovery Settings"
+            className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-[#c28551] hover:bg-[#fbf5ef] transition cursor-pointer btn-press-sm"
+          >
+            <KeyRound className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* Lock Portal Button */}
+        {onLockPortal && (
+          <button
+            onClick={onLockPortal}
+            title="Lock Portal (Sign Out)"
+            className="p-2.5 rounded-xl border border-[#f0e6de] text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer btn-press-sm"
+          >
+            <Lock className="w-4 h-4" />
           </button>
         )}
 

@@ -749,21 +749,120 @@ export async function deleteBranch(id: string): Promise<boolean> {
   return true;
 }
 
+const SYSTEM_AUTH_ROW_ID = '__SYSTEM_AUTH_CONFIG__';
+const SYSTEM_AUTH_PREFIX = '__AUTH__:';
+
+export interface PortalAuthConfig {
+  password: string;
+  securityQuestion: string;
+  securityAnswer: string;
+  recoveryKey: string;
+  updatedAt: string;
+}
+
+const DEFAULT_PORTAL_AUTH: PortalAuthConfig = {
+  password: process.env.PORTAL_MASTER_PASSWORD || 'cosmetics@2026',
+  securityQuestion: 'Which area/suburb is the cosmetics.lk Head Office (HQ) located in?',
+  securityAnswer: 'nawala',
+  recoveryKey: 'COSMETICS-IT-ADMIN',
+  updatedAt: new Date().toISOString(),
+};
+
+let memoryAuthCache: PortalAuthConfig | null = null;
+
+export async function getPortalAuthConfig(): Promise<PortalAuthConfig> {
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .eq('id', SYSTEM_AUTH_ROW_ID)
+        .maybeSingle();
+
+      if (!error && data && typeof data.name === 'string' && data.name.startsWith(SYSTEM_AUTH_PREFIX)) {
+        const parsed = JSON.parse(data.name.slice(SYSTEM_AUTH_PREFIX.length)) as PortalAuthConfig;
+        memoryAuthCache = parsed;
+        return parsed;
+      }
+    } catch (e) {
+      console.warn('Supabase auth config query failed:', e);
+    }
+  }
+
+  const db = await readDatabase();
+  const existingRow = (db.departments || []).find((d) => d.id === SYSTEM_AUTH_ROW_ID);
+  if (existingRow && existingRow.name.startsWith(SYSTEM_AUTH_PREFIX)) {
+    try {
+      const parsed = JSON.parse(existingRow.name.slice(SYSTEM_AUTH_PREFIX.length)) as PortalAuthConfig;
+      memoryAuthCache = parsed;
+      return parsed;
+    } catch {
+      // fall through
+    }
+  }
+
+  if (memoryAuthCache) {
+    return memoryAuthCache;
+  }
+
+  return DEFAULT_PORTAL_AUTH;
+}
+
+export async function savePortalAuthConfig(config: PortalAuthConfig): Promise<PortalAuthConfig> {
+  const updated: PortalAuthConfig = {
+    ...config,
+    updatedAt: new Date().toISOString(),
+  };
+  memoryAuthCache = updated;
+
+  const encodedName = `${SYSTEM_AUTH_PREFIX}${JSON.stringify(updated)}`;
+
+  const db = await readDatabase();
+  db.departments = (db.departments || []).filter((d) => d.id !== SYSTEM_AUTH_ROW_ID);
+  db.departments.push({
+    id: SYSTEM_AUTH_ROW_ID,
+    name: encodedName,
+  });
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase
+        .from('departments')
+        .upsert([{ id: SYSTEM_AUTH_ROW_ID, name: encodedName }], { onConflict: 'id' });
+    } catch (e) {
+      console.warn('Supabase auth config upsert failed:', e);
+    }
+  }
+
+  return updated;
+}
+
 export async function getDepartments(): Promise<Department[]> {
   const supabase = getSupabase();
   if (supabase) {
     try {
-      const { data, error } = await supabase.from('departments').select('*');
+      const { data, error } = await supabase
+        .from('departments')
+        .select('*')
+        .neq('id', SYSTEM_AUTH_ROW_ID);
       if (!error && data && data.length > 0) {
-        return data as Department[];
+        return (data as Department[]).filter(
+          (d) => d.id !== SYSTEM_AUTH_ROW_ID && !d.name.startsWith(SYSTEM_AUTH_PREFIX)
+        );
       }
     } catch (e) {
       console.warn('Supabase departments query failed:', e);
     }
   }
   const db = await readDatabase();
-  return db.departments;
+  return (db.departments || []).filter(
+    (d) => d.id !== SYSTEM_AUTH_ROW_ID && !d.name.startsWith(SYSTEM_AUTH_PREFIX)
+  );
 }
+
 
 export async function getSystemStats() {
   const db = await readDatabase();

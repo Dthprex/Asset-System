@@ -13,6 +13,8 @@ import { StickerSheetModal } from '@/components/StickerSheetModal';
 import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
 import { NewRepairTicketModal } from '@/components/NewRepairTicketModal';
 import { AllInvoicesModal } from '@/components/AllInvoicesModal';
+import { PortalAuthGate } from '@/components/PortalAuthGate';
+import { SecuritySettingsModal } from '@/components/SecuritySettingsModal';
 import { Asset, Branch, Department, CurrentAssignment, RepairTicket } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -46,7 +48,17 @@ export const useApp = () => {
   return context;
 };
 
+const AUTH_SESSION_KEY = 'cosmetics_lk_auth_session_v1';
+
 export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [securityQuestion, setSecurityQuestion] = useState(
+    'Which area/suburb is the cosmetics.lk Head Office (HQ) located in?'
+  );
+  const [recoveryKey, setRecoveryKey] = useState('COSMETICS-IT-ADMIN');
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [assets, setAssets] = useState<Asset[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -82,10 +94,66 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [repairAsset, setRepairAsset] = useState<Asset | null>(null);
   const [isInvoicesOpen, setIsInvoicesOpen] = useState(false);
 
+  useEffect(() => {
+    try {
+      const saved =
+        window.localStorage.getItem(AUTH_SESSION_KEY) ||
+        window.sessionStorage.getItem(AUTH_SESSION_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.authenticated) {
+          setIsAuthenticated(true);
+          if (parsed.securityQuestion) setSecurityQuestion(parsed.securityQuestion);
+          if (parsed.recoveryKey) setRecoveryKey(parsed.recoveryKey);
+        }
+      }
+    } catch {
+      // ignore storage errors
+    } finally {
+      setAuthChecking(false);
+    }
+  }, []);
+
+  const handleAuthenticated = (meta: {
+    securityQuestion: string;
+    recoveryKey: string;
+    rememberMe: boolean;
+  }) => {
+    setSecurityQuestion(meta.securityQuestion);
+    setRecoveryKey(meta.recoveryKey);
+    setIsAuthenticated(true);
+    const payload = JSON.stringify({
+      authenticated: true,
+      securityQuestion: meta.securityQuestion,
+      recoveryKey: meta.recoveryKey,
+      timestamp: Date.now(),
+    });
+    try {
+      if (meta.rememberMe) {
+        window.localStorage.setItem(AUTH_SESSION_KEY, payload);
+      } else {
+        window.sessionStorage.setItem(AUTH_SESSION_KEY, payload);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  };
+
+  const handleLockPortal = () => {
+    setIsAuthenticated(false);
+    try {
+      window.localStorage.removeItem(AUTH_SESSION_KEY);
+      window.sessionStorage.removeItem(AUTH_SESSION_KEY);
+    } catch {
+      // ignore
+    }
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
+
 
   const LOCAL_ASSETS_STORAGE_KEY = 'cosmetics_lk_local_assets_v1';
 
@@ -300,6 +368,18 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     loadData();
   };
 
+  if (authChecking) {
+    return (
+      <div className="min-h-screen bg-[#fdfbf9] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-3 border-[#c28551] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <PortalAuthGate onAuthenticated={handleAuthenticated} />;
+  }
+
   return (
     <AppContext.Provider
       value={{
@@ -344,6 +424,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             onOpenNewAssetModal={openNewIntake}
             onOpenScanner={openScanner}
             onOpenInvoices={openInvoices}
+            onOpenSecuritySettings={() => setIsSecurityModalOpen(true)}
+            onLockPortal={handleLockPortal}
             onRefresh={loadData}
             isRefreshing={refreshing}
             searchQuery={searchQuery}
@@ -471,7 +553,20 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           assets={assets}
         />
 
+        <SecuritySettingsModal
+          isOpen={isSecurityModalOpen}
+          onClose={() => setIsSecurityModalOpen(false)}
+          initialQuestion={securityQuestion}
+          initialRecoveryKey={recoveryKey}
+          onUpdated={(meta) => {
+            setSecurityQuestion(meta.securityQuestion);
+            setRecoveryKey(meta.recoveryKey);
+            showToast('Password & recovery settings synced to Supabase Cloud!');
+          }}
+        />
+
       </div>
     </AppContext.Provider>
   );
 };
+
