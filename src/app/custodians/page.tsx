@@ -18,6 +18,7 @@ import {
   Layers,
   Coins,
   UserCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { Asset } from '@/types/asset';
 import { formatLKR, formatDate, calculateDuration } from '@/lib/utils';
@@ -43,6 +44,7 @@ function CustodiansContent() {
     openDetail,
     openReturn,
     openHandoverVoucher,
+    openAuditReport,
     refreshData,
     showToast,
   } = useApp();
@@ -189,7 +191,20 @@ function CustodiansContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() =>
+              openAuditReport({
+                branch: selectedBranch,
+                department: selectedDepartment,
+              })
+            }
+            className="px-4 py-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Manager Audit Report &amp; CSV</span>
+          </button>
+
           <div className="px-4 py-2.5 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center">
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
               Active Custodians

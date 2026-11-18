@@ -13,14 +13,15 @@ import {
   RotateCcw, 
   Clock,
   Scan,
-  Printer
+  Printer,
+  FileSpreadsheet
 } from 'lucide-react';
 import { Asset } from '@/types/asset';
 import { formatLKR, formatDate, getWarrantyInfo } from '@/lib/utils';
 import { CATEGORIES, STATUSES } from '@/components/AssetFilters';
 
 function InventoryContent() {
-  const { assets, branches, openDetail, openAssign, openReturn, openScanner, openStickerSheet, searchQuery, setSearchQuery } = useApp();
+  const { assets, branches, openDetail, openAssign, openReturn, openScanner, openStickerSheet, openAuditReport, searchQuery, setSearchQuery } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState('ALL');
   const [selectedStatus, setSelectedStatus] = useState('ALL');
@@ -81,7 +82,22 @@ function InventoryContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() =>
+              openAuditReport({
+                branch: selectedBranch,
+                category: selectedCategory,
+                status: selectedStatus === 'ALL' ? 'ACTIVE_ONLY' : selectedStatus,
+              })
+            }
+            title="Manager's Full Audit Report, Complete Item Counts & Excel/CSV Export"
+            className="px-3.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition btn-press-sm cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Audit Report &amp; Excel/CSV</span>
+          </button>
+
           <button
             onClick={openScanner}
             className="px-3.5 py-1.5 rounded-xl border border-[#c28551]/30 bg-white hover:bg-[#fbf5ef] text-[#c28551] text-xs font-semibold flex items-center gap-2 shadow-2xs transition btn-press-sm cursor-pointer"

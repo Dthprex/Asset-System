@@ -9,13 +9,15 @@ import {
   Receipt,
   Database,
   KeyRound,
-  Lock
+  Lock,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface TopNavProps {
   onOpenNewAssetModal: () => void;
   onOpenScanner?: () => void;
   onOpenInvoices?: () => void;
+  onOpenAuditReport?: () => void;
   onOpenSecuritySettings?: () => void;
   onLockPortal?: () => void;
   onRefresh?: () => void;
@@ -34,6 +36,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenNewAssetModal,
   onOpenScanner,
   onOpenInvoices,
+  onOpenAuditReport,
   onOpenSecuritySettings,
   onLockPortal,
   onRefresh,
@@ -166,6 +169,18 @@ export const TopNav: React.FC<TopNavProps> = ({
           </button>
         )}
 
+        {/* Manager Audit Report & Excel/CSV Export */}
+        {onOpenAuditReport && (
+          <button
+            onClick={onOpenAuditReport}
+            title="Manager's Full Fleet Audit Report & Excel/CSV Export"
+            className="px-3.5 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/80 hover:bg-emerald-100 text-emerald-800 text-xs font-bold shadow-2xs transition flex items-center gap-2 cursor-pointer btn-press-sm"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span className="hidden sm:inline">Audit Report / Export</span>
+          </button>
+        )}
+
         {/* Central Invoices & Receipts Vault */}
         {onOpenInvoices && (
           <button
@@ -174,7 +189,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             className="px-3.5 py-2.5 rounded-xl border border-[#c28551]/30 bg-white hover:bg-[#fbf5ef] text-slate-700 hover:text-[#c28551] text-xs font-semibold shadow-2xs transition flex items-center gap-2 cursor-pointer btn-press-sm"
           >
             <Receipt className="w-4 h-4 text-[#c28551]" />
-            <span className="hidden sm:inline">Invoices & Bills</span>
+            <span className="hidden lg:inline">Invoices & Bills</span>
           </button>
         )}
 

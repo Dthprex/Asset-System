@@ -13,12 +13,13 @@ import {
   CheckCircle2, 
   ArrowRight, 
   History, 
-  Plus
+  Plus,
+  FileSpreadsheet
 } from 'lucide-react';
 import { formatLKR, formatDate } from '@/lib/utils';
 
 function DashboardContent() {
-  const { stats, assets, openDetail, openAssign, openReturn, openNewIntake } = useApp();
+  const { stats, assets, openDetail, openAssign, openReturn, openNewIntake, openAuditReport } = useApp();
 
   const metrics = [
     {
@@ -100,7 +101,14 @@ function DashboardContent() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => openAuditReport()}
+              className="px-4 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/90 hover:bg-emerald-100 text-emerald-800 text-xs font-bold shadow-2xs transition flex items-center gap-2 cursor-pointer btn-press"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Manager Audit Report &amp; CSV</span>
+            </button>
             <Link
               href="/inventory"
               className="px-4 py-2.5 rounded-xl border border-[#ead7c7] bg-white/70 hover:bg-white text-[#1d2939] text-xs font-semibold shadow-2xs transition btn-press"

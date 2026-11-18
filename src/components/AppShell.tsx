@@ -314,6 +314,11 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsInvoicesOpen(true);
   };
 
+  const openAuditReport = (filters?: AuditReportFilterOptions) => {
+    setAuditReportFilters(filters || {});
+    setIsAuditReportOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -427,6 +432,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openHandoverVoucher,
         openNewRepair,
         openInvoices,
+        openAuditReport,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -459,6 +465,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             onOpenNewAssetModal={openNewIntake}
             onOpenScanner={openScanner}
             onOpenInvoices={openInvoices}
+            onOpenAuditReport={() => openAuditReport()}
             onOpenSecuritySettings={() => setIsSecurityModalOpen(true)}
             onLockPortal={handleLockPortal}
             onRefresh={loadData}
@@ -587,6 +594,18 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           isOpen={isInvoicesOpen}
           onClose={() => setIsInvoicesOpen(false)}
           assets={assets}
+        />
+
+        <AuditReportModal
+          isOpen={isAuditReportOpen}
+          onClose={() => setIsAuditReportOpen(false)}
+          assets={assets}
+          branches={branches}
+          departments={departments}
+          initialBranch={auditReportFilters.branch}
+          initialCategory={auditReportFilters.category}
+          initialStatus={auditReportFilters.status}
+          initialDepartment={auditReportFilters.department}
         />
 
         <SecuritySettingsModal

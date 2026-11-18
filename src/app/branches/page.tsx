@@ -13,13 +13,14 @@ import {
   History, 
   ArrowRight,
   Plus,
-  Trash2 
+  Trash2,
+  FileSpreadsheet
 } from 'lucide-react';
 import { formatLKR } from '@/lib/utils';
 import { NewBranchModal } from '@/components/NewBranchModal';
 
 function BranchesContent() {
-  const { branches, assets, openDetail, refreshData, showToast } = useApp();
+  const { branches, assets, openDetail, openAuditReport, refreshData, showToast } = useApp();
   const searchParams = useSearchParams();
   const branchParam = searchParams.get('branch');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('ALL');
@@ -111,7 +112,19 @@ function BranchesContent() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() =>
+              openAuditReport({
+                branch: activeBranch ? activeBranch.name : 'ALL',
+              })
+            }
+            className="px-3.5 py-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>{activeBranch ? `${activeBranch.name} Audit Report` : 'Branch Audit Report & CSV'}</span>
+          </button>
+
           <div className="px-4 py-2 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center hidden sm:block">
             <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Showroom Gear</span>
             <span className="text-base font-extrabold text-[#c28551]">{assets.length} Assets</span>
