@@ -278,7 +278,16 @@ function InventoryContent() {
                     </td>
 
                     <td className="py-3 px-4 max-w-xs">
-                      {asset.currentAssignment ? (
+                      {asset.status === 'RETIRED' ? (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] uppercase tracking-wider">
+                          Retired / Scrapped
+                        </span>
+                      ) : asset.status === 'UNDER_REPAIR' ? (
+                        <span className="text-rose-700 font-semibold text-[11px] flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-500" />
+                          <span>Under Repair / Service</span>
+                        </span>
+                      ) : asset.currentAssignment ? (
                         <div>
                           <div className="font-semibold text-[#1d2939] truncate flex items-center gap-1.5">
                             {isBorrowed && <Clock className="w-3 h-3 text-amber-600" />}
@@ -327,22 +336,24 @@ function InventoryContent() {
                           <History className="w-3.5 h-3.5 text-[#c28551]" />
                         </button>
 
-                        {asset.currentAssignment ? (
-                          <button
-                            onClick={() => openReturn(asset)}
-                            title="Return and Damage Inspection"
-                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer btn-press-sm"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => openAssign(asset)}
-                            title="Deploy or Loan"
-                            className="p-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white transition cursor-pointer btn-press-sm"
-                          >
-                            <ArrowRightLeft className="w-3.5 h-3.5" />
-                          </button>
+                        {asset.status !== 'RETIRED' && (
+                          asset.currentAssignment ? (
+                            <button
+                              onClick={() => openReturn(asset)}
+                              title="Return and Damage Inspection"
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition cursor-pointer btn-press-sm"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => openAssign(asset)}
+                              title="Deploy or Loan"
+                              className="p-1.5 rounded-lg bg-[#1d2939] hover:bg-[#c28551] text-white transition cursor-pointer btn-press-sm"
+                            >
+                              <ArrowRightLeft className="w-3.5 h-3.5" />
+                            </button>
+                          )
                         )}
                       </div>
                     </td>
@@ -392,7 +403,13 @@ function InventoryContent() {
                   <div>
                     <div className="text-[10px] text-slate-400">Current Custody</div>
                     <div className="font-semibold text-slate-800 text-[11px] truncate max-w-[140px]">
-                      {asset.currentAssignment ? asset.currentAssignment.assignedToName : 'Ready in IT Lab'}
+                      {asset.status === 'RETIRED'
+                        ? 'Retired / Scrapped'
+                        : asset.status === 'UNDER_REPAIR'
+                        ? 'Under Repair'
+                        : asset.currentAssignment
+                        ? asset.currentAssignment.assignedToName
+                        : 'Ready in IT Lab'}
                     </div>
                   </div>
 

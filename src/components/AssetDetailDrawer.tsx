@@ -28,7 +28,9 @@ import {
   Image as ImageIcon,
   Maximize2,
   Pencil,
-  Save
+  Save,
+  Trash2,
+  Archive
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Asset, AssetCondition, CustodyRecord, MaintenanceRecord, RepairTicket } from '@/types/asset';
@@ -45,6 +47,7 @@ interface AssetDetailDrawerProps {
   onDispatchRepair?: (asset: Asset) => void;
   onOpenStickerSheet?: (asset: Asset) => void;
   onAssetUpdated?: (asset: Asset) => void;
+  onAssetDeleted?: (assetId: string, assetName: string, assetTag: string) => void;
 }
 
 export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
@@ -57,6 +60,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   onDispatchRepair,
   onOpenStickerSheet,
   onAssetUpdated,
+  onAssetDeleted,
 }) => {
   const [history, setHistory] = useState<CustodyRecord[]>([]);
   const [maintenanceList, setMaintenanceList] = useState<MaintenanceRecord[]>([]);
@@ -81,9 +85,19 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   const [editInvoiceDoc, setEditInvoiceDoc] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
 
+  // Retire & Delete confirmation states
+  const [showRetirePrompt, setShowRetirePrompt] = useState(false);
+  const [retireReason, setRetireReason] = useState('');
+  const [processingRetire, setProcessingRetire] = useState(false);
+  const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+  const [processingDelete, setProcessingDelete] = useState(false);
+
   useEffect(() => {
     if (asset && isOpen) {
       setIsEditing(false);
+      setShowRetirePrompt(false);
+      setShowDeletePrompt(false);
+      setRetireReason('');
       setEditName(asset.name);
       setEditBrand(asset.brand);
       setEditModelNumber(asset.modelNumber || '');
@@ -137,6 +151,57 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
     }
   };
 
+  const handleRetireOrRestore = async (action: 'retire' | 'restore') => {
+    if (!asset) return;
+    setProcessingRetire(true);
+    try {
+      const res = await fetch(`/api/assets/${asset.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action,
+          reason: retireReason.trim() || 'Hardware retired / decommissioned from active fleet.',
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setShowRetirePrompt(false);
+        setRetireReason('');
+        fetchHistory(asset.id);
+        if (onAssetUpdated) {
+          onAssetUpdated(data.data);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to retire/restore asset:', err);
+    } finally {
+      setProcessingRetire(false);
+    }
+  };
+
+  const handleDeleteAsset = async () => {
+    if (!asset) return;
+    setProcessingDelete(true);
+    try {
+      const res = await fetch(`/api/assets/${asset.id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setShowDeletePrompt(false);
+        if (onAssetDeleted) {
+          onAssetDeleted(asset.id, asset.name, asset.assetTag);
+        } else {
+          onClose();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete asset:', err);
+    } finally {
+      setProcessingDelete(false);
+    }
+  };
+
   const fetchHistory = async (assetId: string) => {
     setLoadingHistory(true);
     try {
@@ -182,6 +247,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
   const isBorrowed = asset.status === 'BORROWED_TEMPORARY';
   const isRepair = asset.status === 'UNDER_REPAIR';
   const isPermanent = asset.status === 'ALLOCATED_PERMANENT';
+  const isRetired = asset.status === 'RETIRED';
 
   const handleCopyTag = () => {
     navigator.clipboard.writeText(asset.assetTag);
@@ -213,10 +279,15 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               </div>
 
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#faece2] text-[#c28551] border border-[#ead7c7] shadow-2xs">
                     {asset.category}
                   </span>
+                  {isRetired && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-200 text-slate-700 border border-slate-300">
+                      Retired / Scrapped
+                    </span>
+                  )}
                   <button
                     onClick={handleCopyTag}
                     className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-[#ead7c7] text-[#1d2939] text-[11px] font-mono hover:bg-[#fbf5ef] transition cursor-pointer btn-press-sm"
@@ -241,6 +312,8 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                 onClick={() => {
                   setActiveTab('specs');
                   setIsEditing((prev) => !prev);
+                  setShowRetirePrompt(false);
+                  setShowDeletePrompt(false);
                 }}
                 className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-[#faece2] border border-[#ead7c7] text-[#c28551] text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer btn-press-sm"
                 title="Edit price, warranty, vendor, or hardware specs"
@@ -248,6 +321,33 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                 <Pencil className="w-3.5 h-3.5" />
                 <span>{isEditing ? 'Cancel' : 'Edit'}</span>
               </button>
+
+              <button
+                onClick={() => {
+                  setShowRetirePrompt((prev) => !prev);
+                  setShowDeletePrompt(false);
+                }}
+                className={`p-1.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer btn-press-sm ${
+                  isRetired
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100'
+                    : 'bg-white border-amber-200 text-amber-700 hover:bg-amber-50'
+                }`}
+                title={isRetired ? 'Restore to Active Inventory' : 'Retire / Scrap Device'}
+              >
+                <Archive className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowDeletePrompt((prev) => !prev);
+                  setShowRetirePrompt(false);
+                }}
+                className="p-1.5 rounded-xl bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 transition cursor-pointer btn-press-sm"
+                title="Delete Asset Permanently"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+
               <button
                 onClick={onClose}
                 className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-[#faece2]/50 transition cursor-pointer btn-press-sm"
@@ -256,6 +356,101 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Inline Retire / Restore Confirmation Panel */}
+          {showRetirePrompt && (
+            <div className="px-6 py-4 bg-amber-50/90 border-b border-amber-200 space-y-3 animate-in slide-in-from-top-2 duration-150">
+              {isRetired ? (
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-xs font-bold text-slate-900">Restore this device to Active Inventory?</div>
+                    <p className="text-[11px] text-slate-600">
+                      This will set status back to <strong>Available</strong> in the IT Central Lab.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setShowRetirePrompt(false)}
+                      className="px-3 py-1.5 rounded-xl border border-slate-300 bg-white text-slate-600 text-xs font-semibold cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleRetireOrRestore('restore')}
+                      disabled={processingRetire}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50"
+                    >
+                      {processingRetire ? 'Restoring...' : 'Restore to Fleet'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <div>
+                    <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                      <Archive className="w-3.5 h-3.5 text-amber-700" />
+                      <span>Retire / Decommission Hardware ({asset.assetTag})</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 mt-0.5">
+                      Marks the device as <strong>RETIRED</strong> while preserving its full custody and repair history for audits.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={retireReason}
+                      onChange={(e) => setRetireReason(e.target.value)}
+                      placeholder="Reason (e.g., Motherboard dead beyond repair, Sold, Scrapped)..."
+                      className="flex-1 px-3 py-2 rounded-xl bg-white border border-amber-300 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    />
+                    <button
+                      onClick={() => setShowRetirePrompt(false)}
+                      className="px-3 py-2 rounded-xl border border-amber-300 bg-white text-slate-600 text-xs font-semibold cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => handleRetireOrRestore('retire')}
+                      disabled={processingRetire}
+                      className="px-3.5 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {processingRetire ? 'Retiring...' : 'Confirm Retire'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Inline Permanent Delete Confirmation Panel */}
+          {showDeletePrompt && (
+            <div className="px-6 py-4 bg-rose-50 border-b border-rose-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in slide-in-from-top-2 duration-150">
+              <div>
+                <div className="text-xs font-bold text-rose-900 flex items-center gap-1.5">
+                  <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Permanently Delete {asset.name} ({asset.assetTag})?</span>
+                </div>
+                <p className="text-[11px] text-rose-700 mt-0.5">
+                  Removes this asset and its history from Supabase Cloud. Use <strong>Retire</strong> instead if you want to keep audit history.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => setShowDeletePrompt(false)}
+                  className="px-3 py-1.5 rounded-xl border border-rose-200 bg-white text-slate-600 text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAsset}
+                  disabled={processingDelete}
+                  className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold cursor-pointer disabled:opacity-50 whitespace-nowrap"
+                >
+                  {processingDelete ? 'Deleting...' : 'Yes, Delete Permanently'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Tab Selector */}
           <div className="px-6 bg-white border-b border-[#f0e6de] flex items-center gap-6 text-xs font-semibold">

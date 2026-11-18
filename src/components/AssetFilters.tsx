@@ -48,6 +48,7 @@ export const STATUSES = [
   { label: 'Permanent Allocation', value: 'ALLOCATED_PERMANENT' },
   { label: 'Temporary Loan', value: 'BORROWED_TEMPORARY' },
   { label: 'Under Repair / Damaged', value: 'UNDER_REPAIR' },
+  { label: 'Retired / Scrapped', value: 'RETIRED' },
 ];
 
 export const AssetFilters: React.FC<AssetFiltersProps> = ({

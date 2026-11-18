@@ -178,6 +178,17 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     }
   }, [getLocalSavedAssets]);
 
+  const removeLocalAsset = useCallback((assetId: string) => {
+    if (typeof window === 'undefined') return;
+    try {
+      const current = getLocalSavedAssets();
+      const updated = current.filter((a) => a.id !== assetId);
+      window.localStorage.setItem(LOCAL_ASSETS_STORAGE_KEY, JSON.stringify(updated));
+    } catch (e) {
+      console.warn('Could not remove asset from localStorage:', e);
+    }
+  }, [getLocalSavedAssets]);
+
   const mergeWithLocalAssets = useCallback((serverAssets: Asset[]): Asset[] => {
     const localAssets = getLocalSavedAssets();
     if (localAssets.length === 0) return serverAssets;
@@ -364,7 +375,24 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
       setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
       return next;
     });
-    showToast(`Updated details for ${updated.name} (${updated.assetTag})!`);
+    if (updated.status === 'RETIRED') {
+      showToast(`Retired ${updated.name} (${updated.assetTag}) from active fleet.`);
+    } else {
+      showToast(`Updated details for ${updated.name} (${updated.assetTag})!`);
+    }
+    loadData();
+  };
+
+  const handleAssetDeleted = (assetId: string, assetName: string, assetTag: string) => {
+    removeLocalAsset(assetId);
+    setIsDrawerOpen(false);
+    setActiveAsset(null);
+    setAssets((prev) => {
+      const next = prev.filter((a) => a.id !== assetId);
+      setStats((prevStats: any) => computeStatsFromAssets(next, prevStats));
+      return next;
+    });
+    showToast(`Permanently deleted ${assetName} (${assetTag}) from inventory.`);
     loadData();
   };
 
@@ -485,6 +513,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           onDispatchRepair={(asset) => openNewRepair(asset)}
           onOpenStickerSheet={(asset) => openStickerSheet([asset])}
           onAssetUpdated={handleAssetUpdated}
+          onAssetDeleted={handleAssetDeleted}
         />
 
         <NewRepairTicketModal

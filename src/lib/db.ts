@@ -259,10 +259,11 @@ export async function writeDatabase(data: DatabaseSchema): Promise<void> {
 }
 
 let hasAutoSeededSupabase = false;
+const deletedAssetIds = new Set<string>();
 
 export async function getAllAssets(): Promise<Asset[]> {
   const db = await readDatabase();
-  const localAssets = db.assets || [];
+  const localAssets = (db.assets || []).filter((a) => !deletedAssetIds.has(a.id));
 
   const supabase = getSupabase();
   if (supabase) {
@@ -277,7 +278,13 @@ export async function getAllAssets(): Promise<Asset[]> {
               await supabase.from('branches').upsert(db.branches.map((b) => ({ id: b.id, name: b.name, code: b.code, type: b.type })));
             }
             if (db.departments?.length) {
-              await supabase.from('departments').upsert(db.departments.map((d) => ({ id: d.id, name: d.name })));
+              await supabase
+                .from('departments')
+                .upsert(
+                  db.departments
+                    .filter((d) => d.id !== '__SYSTEM_AUTH_CONFIG__')
+                    .map((d) => ({ id: d.id, name: d.name }))
+                );
             }
             await supabase.from('assets').upsert(localAssets.map(mapAssetToRow));
             if (db.custodyHistory?.length) {
@@ -295,21 +302,10 @@ export async function getAllAssets(): Promise<Asset[]> {
           return localAssets.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
 
-        if (data.length > 0) {
-          const supabaseAssets = data.map(mapRowToAsset);
-          const mergedMap = new Map<string, Asset>();
-
-          for (const a of localAssets) {
-            mergedMap.set(a.id, a);
-          }
-          for (const sa of supabaseAssets) {
-            const existing = mergedMap.get(sa.id);
-            if (!existing || new Date(sa.updatedAt).getTime() >= new Date(existing.updatedAt).getTime()) {
-              mergedMap.set(sa.id, sa);
-            }
-          }
-
-          return Array.from(mergedMap.values()).sort(
+        if (data.length > 0 || hasAutoSeededSupabase) {
+          hasAutoSeededSupabase = true;
+          const supabaseAssets = data.map(mapRowToAsset).filter((a) => !deletedAssetIds.has(a.id));
+          return supabaseAssets.sort(
             (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
         }
@@ -501,6 +497,131 @@ export async function updateAsset(id: string, updates: Partial<Asset>): Promise<
   }
 
   return updatedAsset;
+}
+
+export async function retireAsset(
+  id: string,
+  reason: string = 'Hardware retired / decommissioned from active fleet.',
+  performedBy: string = 'IT Asset Admin'
+): Promise<Asset | null> {
+  const db = await readDatabase();
+  const index = db.assets.findIndex((a) => a.id === id);
+  const existing = index !== -1 ? db.assets[index] : (await getAssetById(id))?.asset;
+  if (!existing) return null;
+
+  const previousHolder = existing.currentAssignment
+    ? `${existing.currentAssignment.assignedToName} (${existing.currentAssignment.locationOrBranch})`
+    : 'IT Central Inventory';
+
+  const updatedAsset: Asset = {
+    ...existing,
+    status: 'RETIRED',
+    currentAssignment: null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const retireHistory: CustodyRecord = {
+    id: `HIS-${Date.now().toString().slice(-6)}`,
+    assetId: existing.id,
+    action: 'RETIRED',
+    date: new Date().toISOString().slice(0, 10),
+    performedBy,
+    previousHolder,
+    newHolder: 'Retired / Decommissioned Archive',
+    assignmentType: 'RETURN_TO_IT',
+    notes: reason,
+  };
+
+  if (index !== -1) {
+    db.assets[index] = updatedAsset;
+  } else {
+    db.assets.unshift(updatedAsset);
+  }
+  db.custodyHistory.unshift(retireHistory);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').upsert(mapAssetToRow(updatedAsset));
+      await supabase.from('custody_history').upsert(mapCustodyToRow(retireHistory));
+    } catch (e) {
+      console.warn('Supabase sync retireAsset failed:', e);
+    }
+  }
+
+  return updatedAsset;
+}
+
+export async function restoreAsset(
+  id: string,
+  performedBy: string = 'IT Asset Admin'
+): Promise<Asset | null> {
+  const db = await readDatabase();
+  const index = db.assets.findIndex((a) => a.id === id);
+  const existing = index !== -1 ? db.assets[index] : (await getAssetById(id))?.asset;
+  if (!existing) return null;
+
+  const updatedAsset: Asset = {
+    ...existing,
+    status: 'AVAILABLE',
+    currentAssignment: null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const restoreHistory: CustodyRecord = {
+    id: `HIS-${Date.now().toString().slice(-6)}`,
+    assetId: existing.id,
+    action: 'RETURNED',
+    date: new Date().toISOString().slice(0, 10),
+    performedBy,
+    previousHolder: 'Retired / Decommissioned Archive',
+    newHolder: 'IT Lab & Inventory',
+    assignmentType: 'RETURN_TO_IT',
+    notes: 'Restored from retired archive back to active available inventory.',
+  };
+
+  if (index !== -1) {
+    db.assets[index] = updatedAsset;
+  } else {
+    db.assets.unshift(updatedAsset);
+  }
+  db.custodyHistory.unshift(restoreHistory);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').upsert(mapAssetToRow(updatedAsset));
+      await supabase.from('custody_history').upsert(mapCustodyToRow(restoreHistory));
+    } catch (e) {
+      console.warn('Supabase sync restoreAsset failed:', e);
+    }
+  }
+
+  return updatedAsset;
+}
+
+export async function deleteAsset(id: string): Promise<boolean> {
+  deletedAssetIds.add(id);
+
+  const db = await readDatabase();
+  db.assets = (db.assets || []).filter((a) => a.id !== id);
+  db.custodyHistory = (db.custodyHistory || []).filter((h) => h.assetId !== id);
+  db.repairTickets = (db.repairTickets || []).filter((r) => r.assetId !== id);
+  db.maintenanceRecords = (db.maintenanceRecords || []).filter((m) => m.assetId !== id);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('assets').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase deleteAsset failed:', e);
+    }
+  }
+
+  return true;
 }
 
 export async function assignAsset(
