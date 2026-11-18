@@ -9,7 +9,8 @@ import {
   Check, 
   ShieldAlert, 
   Sparkles,
-  Tag
+  Tag,
+  PackageCheck
 } from 'lucide-react';
 import { Asset, AssetCondition } from '@/types/asset';
 import { calculateDuration, formatDate } from '@/lib/utils';
@@ -41,15 +42,9 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
   onSuccess,
 }) => {
   const [returnDate, setReturnDate] = useState('');
-
-  useEffect(() => {
-    if (isOpen && !returnDate) {
-      setReturnDate(new Date().toISOString().slice(0, 10));
-    }
-  }, [isOpen, returnDate]);
-
   const [conditionUponReturn, setConditionUponReturn] = useState<AssetCondition>('Used - Good');
   const [selectedDamageTags, setSelectedDamageTags] = useState<string[]>([]);
+  const [returnedAccessories, setReturnedAccessories] = useState<string[]>([]);
   const [damageNotes, setDamageNotes] = useState('');
   const [returnPhotos, setReturnPhotos] = useState<string[]>([]);
   const [sanitizationNotes, setSanitizationNotes] = useState('Sanitized with isopropyl alcohol, data wiped, and verified functional.');
@@ -57,12 +52,41 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const issuedAccessories =
+    asset?.currentAssignment && Array.isArray(asset.currentAssignment.accessoriesIssued)
+      ? asset.currentAssignment.accessoriesIssued
+      : [
+          'Original Charger / Power Brick',
+          'Power / USB-C Cable',
+        ];
+
+  useEffect(() => {
+    if (isOpen) {
+      if (!returnDate) {
+        setReturnDate(new Date().toISOString().slice(0, 10));
+      }
+      const list =
+        asset?.currentAssignment && Array.isArray(asset.currentAssignment.accessoriesIssued)
+          ? asset.currentAssignment.accessoriesIssued
+          : ['Original Charger / Power Brick', 'Power / USB-C Cable'];
+      setReturnedAccessories(list);
+    }
+  }, [isOpen, asset, returnDate]);
+
   if (!isOpen || !asset || !asset.currentAssignment) return null;
 
   const currentHolder = asset.currentAssignment.assignedToName;
   const currentBranch = asset.currentAssignment.locationOrBranch;
   const assignedDate = asset.currentAssignment.assignedDate;
   const custodyDuration = calculateDuration(assignedDate, returnDate);
+
+  const missingAccessories = issuedAccessories.filter((acc) => !returnedAccessories.includes(acc));
+
+  const toggleReturnedAccessory = (acc: string) => {
+    setReturnedAccessories((prev) =>
+      prev.includes(acc) ? prev.filter((x) => x !== acc) : [...prev, acc]
+    );
+  };
 
   const toggleDamageTag = (tag: string) => {
     if (selectedDamageTags.includes(tag)) {
@@ -77,11 +101,27 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
     setError(null);
     setSubmitting(true);
 
-    // Combine selected tags with custom notes
+    const missingAccSummary =
+      missingAccessories.length > 0
+        ? `Missing Accessories Upon Return: ${missingAccessories.join(', ')}`
+        : '';
+
+    const returnedAccSummary =
+      returnedAccessories.length > 0
+        ? `Accessories Returned: ${returnedAccessories.join(', ')}`
+        : '';
+
+    // Combine selected tags with missing accessories and custom notes
     const combinedDamages = [
       ...selectedDamageTags,
+      missingAccSummary,
       damageNotes.trim()
     ].filter(Boolean).join('. ');
+
+    const combinedNotes = [
+      sanitizationNotes.trim(),
+      returnedAccSummary,
+    ].filter(Boolean).join(' • ');
 
     try {
       const res = await fetch(`/api/assets/${asset.id}/return`, {
@@ -93,7 +133,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
             ? 'Used - Fair' 
             : conditionUponReturn,
           damages: combinedDamages,
-          notes: sanitizationNotes.trim(),
+          notes: combinedNotes,
           performedBy,
           returnPhotos,
         }),
@@ -166,7 +206,7 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
         )}
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4 max-h-[72vh] overflow-y-auto">
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -199,6 +239,53 @@ export const ReturnChecklistModal: React.FC<ReturnChecklistModalProps> = ({
               </select>
             </div>
           </div>
+
+          {/* Issued Accessories Return Verification */}
+          {issuedAccessories.length > 0 && (
+            <div className="p-4 rounded-2xl bg-emerald-50/50 border border-emerald-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                  <PackageCheck className="w-4 h-4 text-emerald-600" />
+                  <span>Issued Accessories Return Verification</span>
+                </div>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                    missingAccessories.length === 0
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : 'bg-rose-100 text-rose-800 border-rose-300'
+                  }`}
+                >
+                  {missingAccessories.length === 0
+                    ? `All ${issuedAccessories.length} Returned ✓`
+                    : `${missingAccessories.length} Missing!`}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-snug">
+                Verify each accessory handed over to {currentHolder}. Tap to uncheck any missing item:
+              </p>
+
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {issuedAccessories.map((acc) => {
+                  const isReturned = returnedAccessories.includes(acc);
+                  return (
+                    <button
+                      key={acc}
+                      type="button"
+                      onClick={() => toggleReturnedAccessory(acc)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer border flex items-center gap-1.5 btn-press-sm ${
+                        isReturned
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                          : 'bg-rose-50 text-rose-700 border-rose-300'
+                      }`}
+                    >
+                      <span>{isReturned ? '☑ Returned:' : '✗ MISSING:'}</span>
+                      <span>{acc}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Quick Damage Severity Checklist Tags */}
           <div className="p-4 rounded-2xl bg-[#fbf5ef]/70 border border-[#c28551]/30 space-y-2.5">

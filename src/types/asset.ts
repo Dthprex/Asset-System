@@ -45,6 +45,18 @@ export type HistoryAction =
   | 'REPAIR_COMPLETED'
   | 'RETIRED';
 
+export const STANDARD_ACCESSORIES = [
+  'Original Charger / Power Brick',
+  'Power / USB-C Cable',
+  'Protective Bag / Carrying Sleeve',
+  'Wireless Mouse',
+  'USB-C Hub / HDMI Dongle',
+  'Headset / Earphones',
+  'Stylus / Pencil',
+  'SIM Card Installed',
+  'SD Card / Extra Battery',
+] as const;
+
 export interface CurrentAssignment {
   assignmentType: AssignmentType;
   assignedToName: string;
@@ -57,6 +69,7 @@ export interface CurrentAssignment {
   locationOrBranch: string;
   department: string;
   conditionAtHandover?: AssetCondition | string;
+  accessoriesIssued?: string[];
   purpose: string;
   notes?: string;
 }

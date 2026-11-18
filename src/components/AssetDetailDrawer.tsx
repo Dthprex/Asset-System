@@ -574,6 +574,24 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                           <span className="font-semibold">{asset.currentAssignment.locationOrBranch}</span>
                         </div>
                       </div>
+                      {Array.isArray(asset.currentAssignment.accessoriesIssued) &&
+                        asset.currentAssignment.accessoriesIssued.length > 0 && (
+                          <div className="pt-1.5 border-t border-black/10">
+                            <span className="opacity-65 text-[10px] uppercase font-bold block mb-1">
+                              Issued Accessories ({asset.currentAssignment.accessoriesIssued.length}):
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {asset.currentAssignment.accessoriesIssued.map((acc) => (
+                                <span
+                                  key={acc}
+                                  className="px-2 py-0.5 rounded-md bg-white/80 border border-black/10 text-[10px] font-semibold"
+                                >
+                                  ☑ {acc}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       {asset.currentAssignment.expectedReturnDate && (
                         <div className="font-semibold text-amber-700 pt-1">
                           Scheduled Due Date: {formatDate(asset.currentAssignment.expectedReturnDate)}

@@ -8,9 +8,11 @@ import {
   ChevronRight, 
   ChevronLeft, 
   AlertCircle,
-  Sparkles
+  Sparkles,
+  PackageCheck,
+  Plus
 } from 'lucide-react';
-import { Asset, AssetCategory, AssetCondition, Branch, Department } from '@/types/asset';
+import { Asset, AssetCategory, AssetCondition, Branch, Department, STANDARD_ACCESSORIES } from '@/types/asset';
 import { formatLKR } from '@/lib/utils';
 import { CATEGORIES } from './AssetFilters';
 import { MediaUploadField } from '@/components/MediaUploadField';
@@ -116,6 +118,11 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
   const [isCustomDept, setIsCustomDept] = useState(false);
   const [assignedDate, setAssignedDate] = useState(new Date().toISOString().slice(0, 10));
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
+  const [accessoriesIssued, setAccessoriesIssued] = useState<string[]>([
+    'Original Charger / Power Brick',
+    'Power / USB-C Cable',
+  ]);
+  const [customAccessoryInput, setCustomAccessoryInput] = useState('');
   const [purpose, setPurpose] = useState('');
 
   useEffect(() => {
@@ -128,6 +135,21 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
   }, [branches, departments, locationOrBranch, department, isCustomDept]);
 
   if (!isOpen) return null;
+
+  const toggleAccessory = (item: string) => {
+    setAccessoriesIssued((prev) =>
+      prev.includes(item) ? prev.filter((x) => x !== item) : [...prev, item]
+    );
+  };
+
+  const handleAddCustomAccessory = () => {
+    const val = customAccessoryInput.trim();
+    if (!val) return;
+    if (!accessoriesIssued.includes(val)) {
+      setAccessoriesIssued((prev) => [...prev, val]);
+    }
+    setCustomAccessoryInput('');
+  };
 
   const validateStep1 = () => {
     if (!name.trim()) {
@@ -180,6 +202,11 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     setIsCustomDept(false);
     setAssignedDate(new Date().toISOString().slice(0, 10));
     setExpectedReturnDate('');
+    setAccessoriesIssued([
+      'Original Charger / Power Brick',
+      'Power / USB-C Cable',
+    ]);
+    setCustomAccessoryInput('');
     setPurpose('');
     setError(null);
   };
@@ -253,6 +280,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
           locationOrBranch,
           department: finalDepartment,
           conditionAtHandover: condition,
+          accessoriesIssued,
           purpose: purpose.trim() || 'Initial deployment upon procurement intake',
         };
       }
@@ -838,6 +866,64 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                           />
                         </div>
                       )}
+                    </div>
+
+                    {/* Issued Accessories & Charger Checklist */}
+                    <div className="p-3.5 rounded-2xl bg-[#fbf5ef]/70 border border-[#c28551]/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#1d2939]">
+                          <PackageCheck className="w-4 h-4 text-[#c28551]" />
+                          <span>Issued Accessories &amp; Charger Checklist</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-[#c28551] bg-white px-2 py-0.5 rounded-full border border-[#c28551]/30">
+                          {accessoriesIssued.length} Selected
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {Array.from(new Set([...STANDARD_ACCESSORIES, ...accessoriesIssued])).map((item) => {
+                          const isSelected = accessoriesIssued.includes(item);
+                          return (
+                            <button
+                              key={item}
+                              type="button"
+                              onClick={() => toggleAccessory(item)}
+                              className={`px-2.5 py-1 rounded-xl text-[11px] font-medium transition cursor-pointer border flex items-center gap-1 btn-press-sm ${
+                                isSelected
+                                  ? 'bg-[#c28551] text-white border-[#c28551] shadow-2xs font-bold'
+                                  : 'bg-white text-slate-700 border-slate-200/90 hover:border-[#c28551]/40 hover:text-[#c28551]'
+                              }`}
+                            >
+                              <span>{isSelected ? '☑' : '☐'}</span>
+                              <span>{item}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          type="text"
+                          value={customAccessoryInput}
+                          onChange={(e) => setCustomAccessoryInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleAddCustomAccessory();
+                            }
+                          }}
+                          placeholder="Add custom accessory (e.g. 65W Anker Charger, Canon 50mm Lens)..."
+                          className="flex-1 px-3 py-1.5 rounded-xl bg-white border border-[#e6d6c6] text-slate-900 text-xs focus:outline-none focus:border-[#c28551]"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddCustomAccessory}
+                          className="px-3 py-1.5 rounded-xl bg-white hover:bg-[#faece2] text-[#c28551] border border-[#c28551]/30 text-xs font-bold flex items-center gap-1 transition cursor-pointer shrink-0"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Add</span>
+                        </button>
+                      </div>
                     </div>
 
                     <div>

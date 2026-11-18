@@ -38,6 +38,14 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
   const voucherNumber = `VCH-${asset.assetTag}-${(currentAssignment?.assignedDate || new Date().toISOString().slice(0, 10)).replace(/-/g, '')}`;
   const assignedDate = currentAssignment?.assignedDate || new Date().toISOString().slice(0, 10);
   const isTemporary = currentAssignment?.assignmentType === 'TEMPORARY_BORROW';
+  const issuedAccessories =
+    Array.isArray(currentAssignment?.accessoriesIssued)
+      ? currentAssignment!.accessoriesIssued!
+      : [
+          'Original Charger / Power Brick',
+          'Power / USB-C Cable',
+          'Protective Bag / Carrying Sleeve',
+        ];
 
   const handlePrint = () => {
     window.print();
@@ -203,14 +211,21 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
                 {/* Handover Purpose & Checklist */}
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
-                    Checklist &amp; Issued Accessories
+                    Checklist &amp; Issued Accessories ({issuedAccessories.length} Items)
                   </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-700">
-                    <span className="flex items-center gap-1">☑ Original Charger Brick</span>
-                    <span className="flex items-center gap-1">☑ Power / USB-C Cable</span>
-                    <span className="flex items-center gap-1">☑ Protective Case / Sleeve</span>
-                    <span className="flex items-center gap-1">☑ Clean Display &amp; Bezel</span>
-                  </div>
+                  {issuedAccessories.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px] text-slate-700">
+                      {issuedAccessories.map((acc) => (
+                        <span key={acc} className="flex items-center gap-1 font-medium">
+                          ☑ {acc}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-slate-500 italic">
+                      Device Unit Only (No external accessories/chargers issued)
+                    </div>
+                  )}
                   {currentAssignment?.purpose && (
                     <div className="pt-2 text-[11px] text-slate-600 border-t border-slate-200">
                       <span className="font-semibold text-slate-800">Deployment Purpose:</span> &ldquo;{currentAssignment.purpose}&rdquo;
@@ -439,14 +454,19 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
             {/* Accessories Checklist */}
             <div style={{ border: '1px solid #ccc', borderRadius: '6px', padding: '12px 16px', fontSize: '10.5px', marginBottom: '18px', background: '#fafafa' }}>
               <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px', fontSize: '9.5px', color: '#333' }}>
-                Handover Accessories Checklist &amp; Condition at Handover: {currentAssignment?.conditionAtHandover || asset.condition}
+                Handover Accessories Checklist ({issuedAccessories.length} Items) &amp; Condition at Handover: {currentAssignment?.conditionAtHandover || asset.condition}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                <span>[ ✓ ] Power Adapter / Brick</span>
-                <span>[ ✓ ] Original Cable</span>
-                <span>[ ✓ ] Carrying Bag / Sleeve</span>
-                <span>[ ✓ ] Clean Screen &amp; Hardware</span>
-              </div>
+              {issuedAccessories.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {issuedAccessories.map((acc) => (
+                    <span key={acc}>[ ✓ ] {acc}</span>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontStyle: 'italic', color: '#555' }}>
+                  Device Unit Only (No external accessories/chargers issued)
+                </div>
+              )}
               {currentAssignment?.purpose && (
                 <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px dashed #ccc', color: '#333' }}>
                   <strong>Authorized Purpose:</strong> &ldquo;{currentAssignment.purpose}&rdquo;

@@ -27,6 +27,7 @@ export async function POST(
       locationOrBranch: body.locationOrBranch,
       department: (body.department || '').trim(),
       conditionAtHandover: body.conditionAtHandover || body.condition || '',
+      accessoriesIssued: Array.isArray(body.accessoriesIssued) ? body.accessoriesIssued : [],
       purpose: body.purpose || '',
       notes: body.notes || '',
     };

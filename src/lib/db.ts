@@ -438,6 +438,12 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
     if (handoverCondition) {
       metaParts.push(`Condition: ${handoverCondition}`);
     }
+    if (
+      Array.isArray(newAsset.currentAssignment.accessoriesIssued) &&
+      newAsset.currentAssignment.accessoriesIssued.length > 0
+    ) {
+      metaParts.push(`Accessories: ${newAsset.currentAssignment.accessoriesIssued.join(', ')}`);
+    }
     const metaSuffix = metaParts.length > 0 ? ` [${metaParts.join(' • ')}]` : '';
 
     assignHistory = {
@@ -682,6 +688,9 @@ export async function assignAsset(
   if (assignment.department) metaParts.push(`Dept: ${assignment.department}`);
   if (assignment.assignedToContact) metaParts.push(`Contact: ${assignment.assignedToContact}`);
   if (handoverCondition) metaParts.push(`Condition: ${handoverCondition}`);
+  if (Array.isArray(assignment.accessoriesIssued) && assignment.accessoriesIssued.length > 0) {
+    metaParts.push(`Accessories: ${assignment.accessoriesIssued.join(', ')}`);
+  }
   const metaSuffix = metaParts.length > 0 ? ` [${metaParts.join(' • ')}]` : '';
 
   // Add History Record
