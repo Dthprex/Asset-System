@@ -441,6 +441,13 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           activeLoanCount={stats.borrowedCount}
           expiringWarrantyCount={stats.expiringWarrantyCount}
           totalAssetsCount={stats.totalAssets}
+          activeCustodiansCount={
+            new Set(
+              assets
+                .filter((a) => a.currentAssignment && a.status !== 'RETIRED')
+                .map((a) => a.currentAssignment!.assignedToName.trim().toLowerCase())
+            ).size
+          }
           branches={branches}
         />
 

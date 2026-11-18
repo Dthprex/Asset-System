@@ -7,6 +7,7 @@ import {
   LayoutDashboard, 
   Laptop, 
   Store, 
+  Users,
   ClockAlert, 
   ShieldCheck, 
   ChevronLeft, 
@@ -23,6 +24,7 @@ interface SidebarProps {
   activeLoanCount?: number;
   expiringWarrantyCount?: number;
   totalAssetsCount?: number;
+  activeCustodiansCount?: number;
   branches?: Branch[];
 }
 
@@ -32,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeLoanCount = 0,
   expiringWarrantyCount = 0,
   totalAssetsCount = 0,
+  activeCustodiansCount = 0,
   branches = [],
 }) => {
   const pathname = usePathname();
@@ -49,6 +52,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Laptop,
       badge: totalAssetsCount > 0 ? String(totalAssetsCount) : undefined,
       active: pathname === '/inventory',
+    },
+    {
+      label: 'Staff Custodians',
+      href: '/custodians',
+      icon: Users,
+      badge: activeCustodiansCount > 0 ? String(activeCustodiansCount) : undefined,
+      active: pathname === '/custodians',
     },
     {
       label: 'Showrooms & Branches',
