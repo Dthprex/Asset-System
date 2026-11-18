@@ -14,6 +14,7 @@ import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
 import { NewRepairTicketModal } from '@/components/NewRepairTicketModal';
 import { AllInvoicesModal } from '@/components/AllInvoicesModal';
 import { AuditReportModal } from '@/components/AuditReportModal';
+import { ManageDepartmentsModal } from '@/components/ManageDepartmentsModal';
 import { PortalAuthGate } from '@/components/PortalAuthGate';
 import { SecuritySettingsModal } from '@/components/SecuritySettingsModal';
 import { Asset, Branch, Department, CurrentAssignment, RepairTicket } from '@/types/asset';
@@ -44,6 +45,7 @@ interface AppContextType {
   openNewRepair: (asset?: Asset) => void;
   openInvoices: () => void;
   openAuditReport: (filters?: AuditReportFilterOptions) => void;
+  openManageDepartments: () => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -104,6 +106,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isInvoicesOpen, setIsInvoicesOpen] = useState(false);
   const [isAuditReportOpen, setIsAuditReportOpen] = useState(false);
   const [auditReportFilters, setAuditReportFilters] = useState<AuditReportFilterOptions>({});
+  const [isManageDeptsOpen, setIsManageDeptsOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -330,6 +333,10 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
     setIsAuditReportOpen(true);
   };
 
+  const openManageDepartments = () => {
+    setIsManageDeptsOpen(true);
+  };
+
   // Global ⌘B / Ctrl+B Barcode Scanner Keyboard Shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -444,6 +451,7 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
         openNewRepair,
         openInvoices,
         openAuditReport,
+        openManageDepartments,
         searchQuery,
         setSearchQuery,
         showToast,
@@ -620,6 +628,16 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
           initialCategory={auditReportFilters.category}
           initialStatus={auditReportFilters.status}
           initialDepartment={auditReportFilters.department}
+        />
+
+        <ManageDepartmentsModal
+          isOpen={isManageDeptsOpen}
+          onClose={() => setIsManageDeptsOpen(false)}
+          departments={departments}
+          assets={assets}
+          onRefresh={loadData}
+          onShowToast={showToast}
+          onOpenDeptAudit={(deptName) => openAuditReport({ department: deptName })}
         />
 
         <SecuritySettingsModal

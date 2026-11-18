@@ -45,6 +45,7 @@ function CustodiansContent() {
     openReturn,
     openHandoverVoucher,
     openAuditReport,
+    openManageDepartments,
     refreshData,
     showToast,
   } = useApp();
@@ -191,7 +192,15 @@ function CustodiansContent() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={openManageDepartments}
+            className="px-3.5 py-2.5 rounded-2xl border border-[#c28551]/30 bg-white hover:bg-[#faf7f3] text-[#1d2939] text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Layers className="w-4 h-4 text-[#c28551]" />
+            <span>Manage Departments ({departments.length})</span>
+          </button>
+
           <button
             onClick={() =>
               openAuditReport({

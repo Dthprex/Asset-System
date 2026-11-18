@@ -14,18 +14,21 @@ import {
   ArrowRight,
   Plus,
   Trash2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Layers
 } from 'lucide-react';
 import { formatLKR } from '@/lib/utils';
 import { NewBranchModal } from '@/components/NewBranchModal';
 
 function BranchesContent() {
-  const { branches, assets, openDetail, openAuditReport, refreshData, showToast } = useApp();
+  const { branches, departments, assets, openDetail, openAuditReport, openManageDepartments, refreshData, showToast } = useApp();
   const searchParams = useSearchParams();
   const branchParam = searchParams.get('branch');
   const [selectedBranchId, setSelectedBranchId] = useState<string>('ALL');
+  const [selectedDeptName, setSelectedDeptName] = useState<string>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingDeptId, setDeletingDeptId] = useState<string | null>(null);
 
   useEffect(() => {
     if (branchParam && branches.length > 0) {
@@ -80,6 +83,38 @@ function BranchesContent() {
     }
   };
 
+  const handleDeleteDept = async (deptId: string, deptName: string, assetCount: number) => {
+    if (assetCount > 0) {
+      alert(`Cannot delete "${deptName}" because it currently has ${assetCount} active asset(s) deployed. Please reassign or return the assets first.`);
+      return;
+    }
+
+    const confirmed = window.confirm(`Are you sure you want to remove "${deptName}" from the company departments directory?`);
+    if (!confirmed) return;
+
+    setDeletingDeptId(deptId);
+    try {
+      const res = await fetch(`/api/departments?id=${encodeURIComponent(deptId)}`, {
+        method: 'DELETE',
+      });
+      const result = await res.json();
+      if (result.success) {
+        showToast(`Removed department: ${deptName}`);
+        if (selectedDeptName === deptName) {
+          setSelectedDeptName('ALL');
+        }
+        await refreshData();
+      } else {
+        alert(result.error || 'Failed to delete department');
+      }
+    } catch (err) {
+      console.error('Failed to delete department:', err);
+      alert('An error occurred while deleting the department.');
+    } finally {
+      setDeletingDeptId(null);
+    }
+  };
+
   const branchStats = branches.map((b) => {
     const branchAssets = assets.filter((a) => a.currentAssignment?.locationOrBranch === b.name);
     const totalValue = branchAssets.reduce((sum, a) => sum + (Number(a.purchaseAmount) || 0), 0);
@@ -91,8 +126,34 @@ function BranchesContent() {
     };
   });
 
+  const deptStats = departments.map((d) => {
+    const deptAssets = assets.filter(
+      (a) =>
+        a.status !== 'RETIRED' &&
+        a.currentAssignment?.department?.trim().toLowerCase() === d.name.trim().toLowerCase()
+    );
+    const totalValue = deptAssets.reduce((sum, a) => sum + (Number(a.purchaseAmount) || 0), 0);
+    return {
+      ...d,
+      assets: deptAssets,
+      count: deptAssets.length,
+      totalValue,
+    };
+  });
+
   const activeBranch = branchStats.find((b) => b.id === selectedBranchId);
-  const displayedAssets = activeBranch ? activeBranch.assets : assets;
+  const displayedAssets = assets.filter((a) => {
+    if (activeBranch && a.currentAssignment?.locationOrBranch !== activeBranch.name) {
+      return false;
+    }
+    if (
+      selectedDeptName !== 'ALL' &&
+      a.currentAssignment?.department?.trim().toLowerCase() !== selectedDeptName.trim().toLowerCase()
+    ) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -102,13 +163,17 @@ function BranchesContent() {
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#f4e6d8] text-[#844c1d] border border-[#c28551]/30">
-              Retail Network
+              Retail Network &amp; Org Units
             </span>
-            <span className="text-xs text-slate-400 font-mono">• {branches.length} Islandwide Boutiques</span>
+            <span className="text-xs text-slate-400 font-mono">
+              • {branches.length} Locations • {departments.length} Departments
+            </span>
           </div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Showrooms & Regional Deployments</h1>
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+            Showrooms, Branches &amp; Departments
+          </h1>
           <p className="text-xs text-slate-600 mt-0.5 max-w-xl">
-            Track hardware equipment, POS terminals, and digital iPads deployed across cosmetics.lk retail outlets and headquarters.
+            Track hardware equipment, POS terminals, and corporate allocations across cosmetics.lk retail outlets, Pepiliyana Head Office, and company departments.
           </p>
         </div>
 
@@ -117,18 +182,28 @@ function BranchesContent() {
             onClick={() =>
               openAuditReport({
                 branch: activeBranch ? activeBranch.name : 'ALL',
+                department: selectedDeptName !== 'ALL' ? selectedDeptName : 'ALL',
               })
             }
             className="px-3.5 py-2.5 rounded-2xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-            <span>{activeBranch ? `${activeBranch.name} Audit Report` : 'Branch Audit Report & CSV'}</span>
+            <span>
+              {activeBranch
+                ? `${activeBranch.name} Audit Report`
+                : selectedDeptName !== 'ALL'
+                ? `${selectedDeptName} Audit Report`
+                : 'Audit Report & CSV'}
+            </span>
           </button>
 
-          <div className="px-4 py-2 rounded-2xl bg-white border border-[#c28551]/30 shadow-xs text-center hidden sm:block">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Total Showroom Gear</span>
-            <span className="text-base font-extrabold text-[#c28551]">{assets.length} Assets</span>
-          </div>
+          <button
+            onClick={openManageDepartments}
+            className="px-3.5 py-2.5 rounded-2xl border border-[#c28551]/30 bg-white hover:bg-[#faf7f3] text-[#1d2939] font-bold text-xs transition shadow-2xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+          >
+            <Layers className="w-4 h-4 text-[#c28551]" />
+            <span>Manage Departments ({departments.length})</span>
+          </button>
 
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -209,36 +284,141 @@ function BranchesContent() {
         })}
       </div>
 
-      {/* Equipment Deployed at Selected Showroom */}
+      {/* Company Departments Directory & Filter Section */}
+      <div className="p-5 rounded-3xl bg-white border border-slate-200/90 luxury-card-shadow space-y-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Layers className="w-4 h-4 text-[#c28551]" />
+            <h2 className="text-sm font-bold text-slate-900">
+              Company Departments ({departments.length})
+            </h2>
+            {selectedDeptName !== 'ALL' && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#faece2] text-[#c28551] border border-[#c28551]/30">
+                Filtered: {selectedDeptName}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {selectedDeptName !== 'ALL' && (
+              <button
+                onClick={() => setSelectedDeptName('ALL')}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-900 px-2.5 py-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                Clear Department Filter
+              </button>
+            )}
+            <button
+              onClick={openManageDepartments}
+              className="px-3 py-1.5 rounded-xl bg-[#fbf5ef] hover:bg-[#faece2] text-[#c28551] border border-[#c28551]/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add / Remove Departments</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+          <button
+            onClick={() => setSelectedDeptName('ALL')}
+            className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
+              selectedDeptName === 'ALL'
+                ? 'bg-[#1d2939] text-white border-[#1d2939] shadow-2xs'
+                : 'bg-slate-50/70 border-slate-200 hover:border-slate-300 text-slate-800'
+            }`}
+          >
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase font-bold opacity-70">All Departments</div>
+              <div className="text-xs font-bold truncate">All Org Units</div>
+            </div>
+            <span className="text-xs font-extrabold font-mono px-2 py-0.5 rounded-lg bg-white/15">
+              {departments.length}
+            </span>
+          </button>
+
+          {deptStats.map((d) => {
+            const isSelected = selectedDeptName === d.name;
+            return (
+              <button
+                key={d.id}
+                onClick={() => setSelectedDeptName(isSelected ? 'ALL' : d.name)}
+                className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                  isSelected
+                    ? 'bg-[#fbf5ef] border-[#c28551] ring-1 ring-[#c28551]/30'
+                    : 'bg-white border-slate-200 hover:border-[#c28551]/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-900 line-clamp-1">{d.name}</span>
+                  {d.count === 0 && (
+                    <span
+                      role="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteDept(d.id, d.name, d.count);
+                      }}
+                      title={`Remove empty department ${d.name}`}
+                      className="p-0.5 text-slate-300 hover:text-rose-600 rounded transition shrink-0"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                  <span className="font-bold text-[#c28551]">
+                    {d.count} {d.count === 1 ? 'Device' : 'Devices'}
+                  </span>
+                  <span className="font-mono text-slate-600 font-semibold">
+                    {d.totalValue > 0 ? formatLKR(d.totalValue) : 'Rs. 0'}
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Equipment Deployed at Selected Showroom / Department */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <Store className="w-4 h-4 text-[#c28551]" />
             <span>
-              {activeBranch ? `Hardware Deployed at ${activeBranch.name} (${displayedAssets.length})` : `All Deployed Hardware (${displayedAssets.length})`}
+              {activeBranch && selectedDeptName !== 'ALL'
+                ? `Hardware at ${activeBranch.name} • ${selectedDeptName} (${displayedAssets.length})`
+                : activeBranch
+                ? `Hardware Deployed at ${activeBranch.name} (${displayedAssets.length})`
+                : selectedDeptName !== 'ALL'
+                ? `Hardware in ${selectedDeptName} (${displayedAssets.length})`
+                : `All Deployed Hardware (${displayedAssets.length})`}
             </span>
           </h2>
 
-          {selectedBranchId !== 'ALL' && activeBranch && (
+          {(selectedBranchId !== 'ALL' || selectedDeptName !== 'ALL') && (
             <div className="flex items-center gap-2">
+              {selectedBranchId !== 'ALL' && activeBranch && (
+                <button
+                  onClick={() => handleDeleteBranch(activeBranch.id, activeBranch.name, activeBranch.count)}
+                  disabled={deletingId === activeBranch.id}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition flex items-center gap-1.5 cursor-pointer ${
+                    activeBranch.count > 0 
+                      ? 'text-slate-400 border-slate-200 bg-slate-50 cursor-not-allowed opacity-70' 
+                      : 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200'
+                  }`}
+                  title={activeBranch.count > 0 ? "Cannot delete location with assigned hardware" : "Delete this shop location"}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{deletingId === activeBranch.id ? 'Deleting...' : 'Delete Location'}</span>
+                </button>
+              )}
               <button
-                onClick={() => handleDeleteBranch(activeBranch.id, activeBranch.name, activeBranch.count)}
-                disabled={deletingId === activeBranch.id}
-                className={`text-xs font-medium px-2.5 py-1 rounded-lg border transition flex items-center gap-1.5 cursor-pointer ${
-                  activeBranch.count > 0 
-                    ? 'text-slate-400 border-slate-200 bg-slate-50 cursor-not-allowed opacity-70' 
-                    : 'text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200'
-                }`}
-                title={activeBranch.count > 0 ? "Cannot delete location with assigned hardware" : "Delete this shop location"}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>{deletingId === activeBranch.id ? 'Deleting...' : 'Delete Location'}</span>
-              </button>
-              <button
-                onClick={() => setSelectedBranchId('ALL')}
+                onClick={() => {
+                  setSelectedBranchId('ALL');
+                  setSelectedDeptName('ALL');
+                }}
                 className="text-xs font-semibold text-[#c28551] hover:text-[#a66c3b] btn-press-sm px-2.5 py-1 rounded-lg hover:bg-[#fbf5ef]"
               >
-                Show All Showrooms
+                Reset Filters
               </button>
             </div>
           )}

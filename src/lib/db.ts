@@ -431,6 +431,11 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
     }
     if (newAsset.currentAssignment.department) {
       metaParts.push(`Dept: ${newAsset.currentAssignment.department}`);
+      try {
+        await createDepartment(newAsset.currentAssignment.department);
+      } catch {
+        // ignore
+      }
     }
     if (newAsset.currentAssignment.assignedToContact) {
       metaParts.push(`Contact: ${newAsset.currentAssignment.assignedToContact}`);
@@ -685,7 +690,14 @@ export async function assignAsset(
 
   const metaParts: string[] = [];
   if (assignment.assignedToRole) metaParts.push(`Designation: ${assignment.assignedToRole}`);
-  if (assignment.department) metaParts.push(`Dept: ${assignment.department}`);
+  if (assignment.department) {
+    metaParts.push(`Dept: ${assignment.department}`);
+    try {
+      await createDepartment(assignment.department);
+    } catch {
+      // ignore
+    }
+  }
   if (assignment.assignedToContact) metaParts.push(`Contact: ${assignment.assignedToContact}`);
   if (handoverCondition) metaParts.push(`Condition: ${handoverCondition}`);
   if (Array.isArray(assignment.accessoriesIssued) && assignment.accessoriesIssued.length > 0) {
@@ -1049,6 +1061,17 @@ export async function savePortalAuthConfig(config: PortalAuthConfig): Promise<Po
   return updated;
 }
 
+export const DEFAULT_DEPARTMENTS: Department[] = [
+  { id: 'DEPT-01', name: 'Digital Marketing & Content Creation' },
+  { id: 'DEPT-02', name: 'E-Commerce & Web Operations' },
+  { id: 'DEPT-03', name: 'Retail Showrooms & POS Operations' },
+  { id: 'DEPT-04', name: 'Finance & Accounting' },
+  { id: 'DEPT-05', name: 'Warehouse & Logistics' },
+  { id: 'DEPT-06', name: 'Customer Care & Call Center' },
+  { id: 'DEPT-07', name: 'Human Resources & Admin' },
+  { id: 'DEPT-08', name: 'IT & Systems Infrastructure' },
+];
+
 export async function getDepartments(): Promise<Department[]> {
   const supabase = getSupabase();
   if (supabase) {
@@ -1058,18 +1081,84 @@ export async function getDepartments(): Promise<Department[]> {
         .select('*')
         .neq('id', SYSTEM_AUTH_ROW_ID);
       if (!error && data && data.length > 0) {
-        return (data as Department[]).filter(
+        const filtered = (data as Department[]).filter(
           (d) => d.id !== SYSTEM_AUTH_ROW_ID && !d.name.startsWith(SYSTEM_AUTH_PREFIX)
         );
+        if (filtered.length > 0) {
+          return filtered;
+        }
       }
     } catch (e) {
       console.warn('Supabase departments query failed:', e);
     }
   }
   const db = await readDatabase();
-  return (db.departments || []).filter(
+  const localDepts = (db.departments || []).filter(
     (d) => d.id !== SYSTEM_AUTH_ROW_ID && !d.name.startsWith(SYSTEM_AUTH_PREFIX)
   );
+  if (localDepts.length === 0) {
+    db.departments = [...(db.departments || []), ...DEFAULT_DEPARTMENTS];
+    await writeDatabase(db);
+    return DEFAULT_DEPARTMENTS;
+  }
+  return localDepts;
+}
+
+export async function createDepartment(name: string): Promise<Department> {
+  const cleanName = name.trim();
+  const existingDepts = await getDepartments();
+
+  const duplicate = existingDepts.find(
+    (d) => d.name.trim().toLowerCase() === cleanName.toLowerCase()
+  );
+  if (duplicate) {
+    return duplicate;
+  }
+
+  const maxNum = existingDepts.reduce((max, d) => {
+    const num = parseInt(d.id.replace(/\D/g, ''), 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+  const nextNum = String(maxNum + 1).padStart(2, '0');
+  const newDept: Department = {
+    id: `DEPT-${nextNum}`,
+    name: cleanName,
+  };
+
+  const db = await readDatabase();
+  db.departments = db.departments || [];
+  db.departments.push(newDept);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('departments').upsert([newDept], { onConflict: 'id' });
+    } catch (e) {
+      console.warn('Supabase department insert failed:', e);
+    }
+  }
+
+  return newDept;
+}
+
+export async function deleteDepartment(id: string): Promise<boolean> {
+  if (!id || id === SYSTEM_AUTH_ROW_ID) return false;
+
+  const db = await readDatabase();
+  db.departments = (db.departments || []).filter((d) => d.id !== id);
+  await writeDatabase(db);
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('departments').delete().eq('id', id);
+    } catch (e) {
+      console.warn('Supabase department delete failed:', e);
+    }
+  }
+
+  return true;
 }
 
 
