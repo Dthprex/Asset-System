@@ -50,6 +50,8 @@ export interface CurrentAssignment {
   assignedToName: string;
   assignedToRole: string;
   assignedToContact: string;
+  employeeId?: string;
+  employeeRole?: string;
   assignedDate: string;
   expectedReturnDate?: string;
   locationOrBranch: string;

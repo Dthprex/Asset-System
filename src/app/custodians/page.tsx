@@ -64,8 +64,8 @@ function CustodiansContent() {
       if (!asset.currentAssignment || asset.status === 'RETIRED') continue;
       const ca = asset.currentAssignment;
       const normalizedName = ca.assignedToName.trim().toLowerCase();
-      const normalizedEmpId = (ca.employeeId || '').trim().toLowerCase();
-      const key = normalizedEmpId ? `${normalizedName}__${normalizedEmpId}` : normalizedName;
+      const contactOrId = (ca.employeeId || ca.assignedToContact || '').trim();
+      const key = normalizedName;
 
       const existing = map.get(key);
       const val = Number(asset.purchaseAmount) || 0;
@@ -80,8 +80,8 @@ function CustodiansContent() {
         map.set(key, {
           key,
           name: ca.assignedToName.trim(),
-          role: ca.employeeRole || 'Staff Member',
-          employeeId: ca.employeeId || '',
+          role: ca.assignedToRole || ca.employeeRole || 'Staff Member',
+          employeeId: contactOrId,
           branch: ca.locationOrBranch || 'Unassigned Branch',
           department: ca.department || 'General',
           assets: [asset],
