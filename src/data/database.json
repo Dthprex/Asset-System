@@ -1,6 +1,12 @@
 {
   "branches": [
     {
+      "id": "BR-03",
+      "name": "Pepiliyana Head Office",
+      "code": "HQ-PEPILIYANA",
+      "type": "Head Office"
+    },
+    {
       "id": "BR-07",
       "name": "IT Lab & Staging Area",
       "code": "IT-LAB",

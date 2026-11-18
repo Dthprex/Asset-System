@@ -1443,7 +1443,7 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
               {/* Footer */}
               <div style={{ marginTop: '10px', paddingTop: '6px', borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', fontSize: '8.5px', color: '#444' }}>
                 <span>Scan QR for Custody & Specs</span>
-                <span>Helpline: 011 234 5678</span>
+                <span>IT Dept: 0776238098</span>
               </div>
             </div>
           </div>

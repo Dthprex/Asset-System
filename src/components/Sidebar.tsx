@@ -193,7 +193,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const hasHq = branches.some(b => b.type === 'Head Office' || b.name.includes('HQ') || b.name.includes('Head Office'));
                 const nonHq = branches.filter(b => b.type !== 'Head Office' && !b.name.includes('HQ') && !b.name.includes('Head Office')).length;
                 if (hasHq && nonHq > 0) {
-                  return `Head Office Nawala • ${nonHq} ${nonHq === 1 ? 'Showroom' : 'Showrooms'} synced`;
+                  return `Pepiliyana Head Office • ${nonHq} ${nonHq === 1 ? 'Showroom' : 'Showrooms'} synced`;
                 }
                 return `${branches.length} ${branches.length === 1 ? 'Location' : 'Locations'} synced`;
               })()}

@@ -116,13 +116,15 @@ body {
   animation: slideInRightSpring 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Print styles for QR Asset Labels & Documents */
+/* Print styles for QR Asset Labels & A4 Portrait Vouchers */
 @media print {
   @page {
-    margin: 8mm;
-    size: auto;
+    size: A4 portrait;
+    margin: 10mm;
   }
   html, body {
+    width: 210mm !important;
+    min-height: 297mm !important;
     background: white !important;
     color: black !important;
     margin: 0 !important;
@@ -135,7 +137,7 @@ body {
     visibility: visible !important;
   }
   .print-area {
-    position: fixed !important;
+    position: absolute !important;
     left: 0 !important;
     top: 0 !important;
     width: 100% !important;

@@ -319,7 +319,7 @@ export const StickerSheetModal: React.FC<StickerSheetModalProps> = ({
                         {showHelpline && (
                           <div className="mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[7px] text-slate-400 font-semibold tracking-tight">
                             <span>PROPERTY OF COSMETICS.LK</span>
-                            <span>HELPLINE: +94 11 234 5678</span>
+                            <span>IT DEPT: 0776238098</span>
                           </div>
                         )}
                       </div>
@@ -476,7 +476,7 @@ export const StickerSheetModal: React.FC<StickerSheetModalProps> = ({
                 {showHelpline && (
                   <div style={{ marginTop: '6px', paddingTop: '4px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', fontSize: '8px', color: '#555', fontWeight: '600' }}>
                     <span>PROPERTY OF COSMETICS.LK</span>
-                    <span>HELPLINE: +94 11 234 5678</span>
+                    <span>IT DEPT: 0776238098</span>
                   </div>
                 )}
               </div>

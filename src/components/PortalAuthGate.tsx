@@ -310,7 +310,7 @@ export const PortalAuthGate: React.FC<PortalAuthGateProps> = ({ onAuthenticated 
                       type="text"
                       value={securityAnswer}
                       onChange={(e) => setSecurityAnswer(e.target.value)}
-                      placeholder="e.g., Nawala"
+                      placeholder="e.g., Pepiliyana"
                       autoFocus
                       className="w-full px-3.5 py-2.5 rounded-xl bg-[#fdfbf9] border border-[#e6d5c5] text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#c28551]/25 focus:border-[#c28551]"
                     />

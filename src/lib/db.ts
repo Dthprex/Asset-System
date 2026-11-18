@@ -764,8 +764,8 @@ export const DEFAULT_BRANCHES: Branch[] = [
   },
   {
     id: 'BR-03',
-    name: 'Nawala HQ (Head Office)',
-    code: 'HQ-NAWALA',
+    name: 'Pepiliyana Head Office',
+    code: 'HQ-PEPILIYANA',
     type: 'Head Office',
   },
   {
@@ -794,22 +794,64 @@ export const DEFAULT_BRANCHES: Branch[] = [
   },
 ];
 
+let hasSyncedPepiliyanaHq = false;
+
 export async function getBranches(): Promise<Branch[]> {
+  const pepiliyanaBranch: Branch = {
+    id: 'BR-03',
+    name: 'Pepiliyana Head Office',
+    code: 'HQ-PEPILIYANA',
+    type: 'Head Office',
+  };
+
   const supabase = getSupabase();
   if (supabase) {
     try {
       const { data, error } = await supabase.from('branches').select('*');
       if (!error && data && data.length > 0) {
-        return data as Branch[];
+        let branches = data as Branch[];
+        const nawalaBranch = branches.find((b) => b.name.toLowerCase().includes('nawala'));
+        const hasPepiliyana = branches.some((b) => b.name.toLowerCase().includes('pepiliyana'));
+
+        if (nawalaBranch) {
+          const updatedBranch: Branch = {
+            ...nawalaBranch,
+            name: 'Pepiliyana Head Office',
+            code: 'HQ-PEPILIYANA',
+            type: 'Head Office',
+          };
+          await supabase.from('branches').upsert([updatedBranch]);
+          branches = branches.map((b) => (b.id === nawalaBranch.id ? updatedBranch : b));
+        } else if (!hasPepiliyana && !hasSyncedPepiliyanaHq) {
+          hasSyncedPepiliyanaHq = true;
+          await supabase.from('branches').upsert([pepiliyanaBranch]);
+          branches = [pepiliyanaBranch, ...branches];
+        }
+
+        return branches;
       }
     } catch (e) {
       console.warn('Supabase branches query failed:', e);
     }
   }
   const db = await readDatabase();
-  if (!db.branches) {
+  if (!db.branches || db.branches.length === 0) {
     db.branches = DEFAULT_BRANCHES;
     await writeDatabase(db);
+  } else {
+    const nawalaIdx = db.branches.findIndex((b) => b.name.toLowerCase().includes('nawala'));
+    if (nawalaIdx !== -1) {
+      db.branches[nawalaIdx] = {
+        ...db.branches[nawalaIdx],
+        name: 'Pepiliyana Head Office',
+        code: 'HQ-PEPILIYANA',
+        type: 'Head Office',
+      };
+      await writeDatabase(db);
+    } else if (!db.branches.some((b) => b.name.toLowerCase().includes('pepiliyana'))) {
+      db.branches.unshift(pepiliyanaBranch);
+      await writeDatabase(db);
+    }
   }
   return db.branches;
 }
@@ -884,7 +926,7 @@ export interface PortalAuthConfig {
 const DEFAULT_PORTAL_AUTH: PortalAuthConfig = {
   password: process.env.PORTAL_MASTER_PASSWORD || 'cosmetics@2026',
   securityQuestion: 'Which area/suburb is the cosmetics.lk Head Office (HQ) located in?',
-  securityAnswer: 'nawala',
+  securityAnswer: 'pepiliyana',
   recoveryKey: 'COSMETICS-IT-ADMIN',
   updatedAt: new Date().toISOString(),
 };

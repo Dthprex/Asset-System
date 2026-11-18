@@ -57,7 +57,12 @@ export async function POST(req: NextRequest) {
       if (recoveryMethod === 'security_question') {
         const inputAnswer = String(securityAnswer || '').trim().toLowerCase();
         const expectedAnswer = config.securityAnswer.trim().toLowerCase();
-        if (!inputAnswer || inputAnswer !== expectedAnswer) {
+        const isDefaultHqAnswer =
+          expectedAnswer === 'pepiliyana' || expectedAnswer === 'nawala';
+        const isValidAnswer = isDefaultHqAnswer
+          ? inputAnswer === 'pepiliyana' || inputAnswer === 'nawala' || inputAnswer === 'pepiliyana head office'
+          : inputAnswer === expectedAnswer;
+        if (!inputAnswer || !isValidAnswer) {
           return NextResponse.json(
             {
               success: false,

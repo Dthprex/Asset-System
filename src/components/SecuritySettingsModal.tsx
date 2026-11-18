@@ -252,7 +252,7 @@ export const SecuritySettingsModal: React.FC<SecuritySettingsModalProps> = ({
                 type="text"
                 value={securityAnswer}
                 onChange={(e) => setSecurityAnswer(e.target.value)}
-                placeholder="e.g., Nawala (case-insensitive)"
+                placeholder="e.g., Pepiliyana (case-insensitive)"
                 className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#c28551]/25 focus:border-[#c28551]"
               />
             </div>
