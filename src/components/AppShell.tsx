@@ -13,10 +13,18 @@ import { StickerSheetModal } from '@/components/StickerSheetModal';
 import { HandoverVoucherModal } from '@/components/HandoverVoucherModal';
 import { NewRepairTicketModal } from '@/components/NewRepairTicketModal';
 import { AllInvoicesModal } from '@/components/AllInvoicesModal';
+import { AuditReportModal } from '@/components/AuditReportModal';
 import { PortalAuthGate } from '@/components/PortalAuthGate';
 import { SecuritySettingsModal } from '@/components/SecuritySettingsModal';
 import { Asset, Branch, Department, CurrentAssignment, RepairTicket } from '@/types/asset';
 import { CheckCircle2 } from 'lucide-react';
+
+export interface AuditReportFilterOptions {
+  branch?: string;
+  category?: string;
+  status?: string;
+  department?: string;
+}
 
 interface AppContextType {
   assets: Asset[];
@@ -35,6 +43,7 @@ interface AppContextType {
   openHandoverVoucher: (asset: Asset, assignment?: CurrentAssignment) => void;
   openNewRepair: (asset?: Asset) => void;
   openInvoices: () => void;
+  openAuditReport: (filters?: AuditReportFilterOptions) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   showToast: (msg: string) => void;
@@ -93,6 +102,8 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
   const [isRepairModalOpen, setIsRepairModalOpen] = useState(false);
   const [repairAsset, setRepairAsset] = useState<Asset | null>(null);
   const [isInvoicesOpen, setIsInvoicesOpen] = useState(false);
+  const [isAuditReportOpen, setIsAuditReportOpen] = useState(false);
+  const [auditReportFilters, setAuditReportFilters] = useState<AuditReportFilterOptions>({});
 
   useEffect(() => {
     try {
