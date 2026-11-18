@@ -263,7 +263,7 @@ function BranchesContent() {
                     {asset.currentAssignment?.assignedToName || 'Unassigned'}
                   </span>
                   <span className="font-bold text-slate-900 text-[11px] font-mono">
-                    {formatLKR(asset.purchaseAmount)}
+                    {asset.purchaseAmount > 0 ? formatLKR(asset.purchaseAmount) : 'Unrecorded'}
                   </span>
                 </div>
               </div>

@@ -114,7 +114,9 @@ function WarrantyContent() {
   const categorized = assets.map((a) => {
     const wInfo = getWarrantyInfo(a.warrantyEndDate, currentDate || undefined);
     const isRepair = a.status === 'UNDER_REPAIR' || a.condition.toLowerCase().includes('damage');
-    const wDate = a.warrantyEndDate ? new Date(a.warrantyEndDate) : null;
+    const isValidWarrantyDate =
+      a.warrantyEndDate && a.warrantyEndDate !== '1970-01-01' && a.warrantyEndDate !== 'UNKNOWN';
+    const wDate = isValidWarrantyDate ? new Date(a.warrantyEndDate) : null;
     const isExpiringSoon = currentDate && in30Days && wDate ? (wDate >= currentDate && wDate <= in30Days) : false;
     const isExpired = currentDate && wDate ? (wDate < currentDate) : false;
 
@@ -439,7 +441,9 @@ function WarrantyContent() {
                 </div>
                 <div className="flex items-center justify-between text-slate-500">
                   <span>Fleet Value:</span>
-                  <span className="font-bold text-[#c28551] font-mono">{formatLKR(asset.purchaseAmount)}</span>
+                  <span className="font-bold text-[#c28551] font-mono">
+                    {asset.purchaseAmount > 0 ? formatLKR(asset.purchaseAmount) : 'Unrecorded'}
+                  </span>
                 </div>
               </div>
 
