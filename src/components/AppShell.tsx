@@ -484,6 +484,9 @@ export const AppShell: React.FC<{ children: React.ReactNode }> = ({ children }) 
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             sidebarCollapsed={sidebarCollapsed}
+            assets={assets}
+            onSelectAsset={openDetail}
+            onOpenReturn={openReturn}
             dbStatus={stats.dbStatus}
           />
 

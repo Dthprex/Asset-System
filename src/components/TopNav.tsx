@@ -12,6 +12,8 @@ import {
   Lock,
   FileSpreadsheet
 } from 'lucide-react';
+import { Asset } from '@/types/asset';
+import { SmartAlertBell } from '@/components/SmartAlertBell';
 
 interface TopNavProps {
   onOpenNewAssetModal: () => void;
@@ -25,6 +27,9 @@ interface TopNavProps {
   searchQuery?: string;
   onSearchChange?: (q: string) => void;
   sidebarCollapsed?: boolean;
+  assets?: Asset[];
+  onSelectAsset?: (asset: Asset) => void;
+  onOpenReturn?: (asset: Asset) => void;
   dbStatus?: {
     connected: boolean;
     mode: 'SUPABASE_CLOUD' | 'FALLBACK_LOCAL';
@@ -44,6 +49,9 @@ export const TopNav: React.FC<TopNavProps> = ({
   searchQuery = '',
   onSearchChange,
   sidebarCollapsed = false,
+  assets = [],
+  onSelectAsset,
+  onOpenReturn,
   dbStatus,
 }) => {
   const [colomboTime, setColomboTime] = useState<string>('');
@@ -119,6 +127,13 @@ export const TopNav: React.FC<TopNavProps> = ({
           <span className="font-bold text-[#c28551]">Colombo:</span>
           <span className="font-mono text-[#1d2939] font-semibold">{colomboTime || 'Syncing...'}</span>
         </div>
+
+        {/* Smart Alert Bell (Overdue Loans, Warranties, Repairs & Condition) */}
+        <SmartAlertBell
+          assets={assets}
+          onSelectAsset={onSelectAsset}
+          onOpenReturn={onOpenReturn}
+        />
 
         {/* Refresh Button */}
         {onRefresh && (
