@@ -501,6 +501,9 @@ function CustodiansContent() {
                               >
                                 {isLoan ? 'Temp Loan' : 'Permanent'}
                               </span>
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                {asset.currentAssignment?.conditionAtHandover || asset.condition}
+                              </span>
                               {asset.currentAssignment?.assignedDate && (
                                 <span className="text-[10px] text-slate-400 font-mono flex items-center gap-0.5">
                                   <Clock className="w-2.5 h-2.5" />

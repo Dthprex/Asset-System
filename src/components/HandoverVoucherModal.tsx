@@ -137,24 +137,18 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
                         <span className="text-slate-500">Full Name:</span>
                         <span className="font-bold text-slate-900">{currentAssignment?.assignedToName || 'Unassigned'}</span>
                       </div>
-                      {currentAssignment?.assignedToRole && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Designation:</span>
-                          <span className="text-slate-700">{currentAssignment.assignedToRole}</span>
-                        </div>
-                      )}
-                      {currentAssignment?.department && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Department:</span>
-                          <span className="text-slate-700">{currentAssignment.department}</span>
-                        </div>
-                      )}
-                      {currentAssignment?.assignedToContact && (
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">Contact / Ext:</span>
-                          <span className="font-mono text-slate-700">{currentAssignment.assignedToContact}</span>
-                        </div>
-                      )}
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Designation:</span>
+                        <span className="font-semibold text-slate-800">{currentAssignment?.assignedToRole || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Department:</span>
+                        <span className="font-semibold text-slate-800">{currentAssignment?.department || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Contact Number:</span>
+                        <span className="font-mono font-semibold text-slate-800">{currentAssignment?.assignedToContact || 'N/A'}</span>
+                      </div>
                       {isTemporary && currentAssignment?.expectedReturnDate && (
                         <div className="flex justify-between pt-1 border-t border-slate-100 text-amber-900 font-bold">
                           <span>Expected Return Date:</span>
@@ -184,8 +178,10 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
                         <span className="font-mono text-slate-800">{asset.serialNumber}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Intake Condition:</span>
-                        <span className="font-semibold text-slate-800">{asset.condition}</span>
+                        <span className="text-slate-500">Condition at Handover:</span>
+                        <span className="font-semibold text-slate-800">
+                          {currentAssignment?.conditionAtHandover || asset.condition}
+                        </span>
                       </div>
                       {asset.hasSim && (
                         <div className="flex justify-between text-[10px] text-slate-600 font-mono">
@@ -418,6 +414,10 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
                       <td style={{ color: '#555' }}>Serial Number:</td>
                       <td style={{ fontFamily: 'monospace' }}>{asset.serialNumber}</td>
                     </tr>
+                    <tr>
+                      <td style={{ color: '#555' }}>Item Condition:</td>
+                      <td style={{ fontWeight: 'bold' }}>{currentAssignment?.conditionAtHandover || asset.condition}</td>
+                    </tr>
                     {asset.hasSim && asset.imei1 && (
                       <tr>
                         <td style={{ color: '#555' }}>Cellular IMEI:</td>
@@ -439,7 +439,7 @@ export const HandoverVoucherModal: React.FC<HandoverVoucherModalProps> = ({
             {/* Accessories Checklist */}
             <div style={{ border: '1px solid #ccc', borderRadius: '6px', padding: '12px 16px', fontSize: '10.5px', marginBottom: '18px', background: '#fafafa' }}>
               <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginBottom: '8px', fontSize: '9.5px', color: '#333' }}>
-                Handover Accessories Checklist &amp; Initial Condition Grade: {asset.condition}
+                Handover Accessories Checklist &amp; Condition at Handover: {currentAssignment?.conditionAtHandover || asset.condition}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                 <span>[ ✓ ] Power Adapter / Brick</span>

@@ -20,12 +20,13 @@ export async function POST(
     const assignment: CurrentAssignment = {
       assignmentType: body.assignmentType || 'PERMANENT_EMPLOYEE',
       assignedToName: body.assignedToName.trim(),
-      assignedToRole: body.assignedToRole || '',
-      assignedToContact: body.assignedToContact || '',
+      assignedToRole: (body.assignedToRole || '').trim(),
+      assignedToContact: (body.assignedToContact || '').trim(),
       assignedDate: body.assignedDate || new Date().toISOString().slice(0, 10),
       expectedReturnDate: body.expectedReturnDate || '',
       locationOrBranch: body.locationOrBranch,
-      department: body.department || '',
+      department: (body.department || '').trim(),
+      conditionAtHandover: body.conditionAtHandover || body.condition || '',
       purpose: body.purpose || '',
       notes: body.notes || '',
     };

@@ -37,13 +37,20 @@ export const AssignModal: React.FC<AssignModalProps> = ({
   const [assignedToContact, setAssignedToContact] = useState('');
   const [locationOrBranch, setLocationOrBranch] = useState(branches[0]?.name || 'Pepiliyana Head Office');
   const [department, setDepartment] = useState(departments[0]?.name || 'Digital Marketing & Content Creation');
+  const [customDepartment, setCustomDepartment] = useState('');
+  const [isCustomDept, setIsCustomDept] = useState(false);
+  const [conditionAtHandover, setConditionAtHandover] = useState<string>('Used - Good');
   const [assignedDate, setAssignedDate] = useState('');
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && asset) {
+      setConditionAtHandover(asset.condition || 'Used - Good');
       if (branches.length > 0 && (!locationOrBranch || !branches.some((b) => b.name === locationOrBranch))) {
         setLocationOrBranch(branches[0].name);
+      }
+      if (departments.length > 0 && !isCustomDept && (!department || !departments.some((d) => d.name === department))) {
+        setDepartment(departments[0].name);
       }
       if (!assignedDate) {
         setAssignedDate(new Date().toISOString().slice(0, 10));
@@ -54,7 +61,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
         setExpectedReturnDate(nextWeek.toISOString().slice(0, 10));
       }
     }
-  }, [isOpen, assignedDate, expectedReturnDate, branches, locationOrBranch]);
+  }, [isOpen, asset, assignedDate, expectedReturnDate, branches, departments, locationOrBranch, department, isCustomDept]);
 
   const [purpose, setPurpose] = useState('');
   const [notes, setNotes] = useState('');
@@ -64,13 +71,29 @@ export const AssignModal: React.FC<AssignModalProps> = ({
   if (!isOpen || !asset) return null;
 
   const isTemporaryBorrow = assignmentType === 'TEMPORARY_BORROW';
+  const finalDepartment = isCustomDept ? customDepartment.trim() : department;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
     if (!assignedToName.trim()) {
-      setError('Please specify who or which counter will receive this item');
+      setError('Please enter the Custodian / Person Name receiving this item');
+      return;
+    }
+
+    if (!assignedToRole.trim()) {
+      setError('Please enter the Designation of the person receiving this item');
+      return;
+    }
+
+    if (!finalDepartment) {
+      setError('Please select or enter the Department of the person');
+      return;
+    }
+
+    if (!assignedToContact.trim()) {
+      setError('Please enter the Contact Number of the person receiving this item');
       return;
     }
 
@@ -88,10 +111,11 @@ export const AssignModal: React.FC<AssignModalProps> = ({
         body: JSON.stringify({
           assignmentType,
           assignedToName: assignedToName.trim(),
-          assignedToRole,
-          assignedToContact,
+          assignedToRole: assignedToRole.trim(),
+          assignedToContact: assignedToContact.trim(),
           locationOrBranch,
-          department,
+          department: finalDepartment,
+          conditionAtHandover,
           assignedDate,
           expectedReturnDate: isTemporaryBorrow ? expectedReturnDate : '',
           purpose,
@@ -128,7 +152,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <ArrowRightLeft className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900 tracking-tight">Deploy / Assign Hardware</h2>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight">Handover / Deploy Hardware</h2>
               <p className="text-xs text-slate-500">
                 {asset.name} • <span className="font-mono text-[#c28551] font-semibold">{asset.assetTag}</span>
               </p>
@@ -144,8 +168,9 @@ export const AssignModal: React.FC<AssignModalProps> = ({
         </div>
 
         {error && (
-          <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
-            {error}
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -155,10 +180,26 @@ export const AssignModal: React.FC<AssignModalProps> = ({
           {/* Deployment Mode Grid */}
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-2">
-              Select Deployment Mode:
+              Select Handover / Deployment Mode:
             </label>
             <div className="grid grid-cols-2 gap-2.5">
               
+              <button
+                type="button"
+                onClick={() => setAssignmentType('PERMANENT_EMPLOYEE')}
+                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
+                  assignmentType === 'PERMANENT_EMPLOYEE'
+                    ? 'bg-[#fbf5ef] border-[#c28551] text-[#844c1d] shadow-xs ring-1 ring-[#c28551]/30 glow-terracotta'
+                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900">
+                  <UserCheck className="w-4 h-4 text-[#c28551]" />
+                  <span>Individual Employee</span>
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">Primary work laptop / phone</div>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setAssignmentType('LOCATION_SHOWROOM')}
@@ -193,22 +234,6 @@ export const AssignModal: React.FC<AssignModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => setAssignmentType('PERMANENT_EMPLOYEE')}
-                className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
-                  assignmentType === 'PERMANENT_EMPLOYEE'
-                    ? 'bg-[#fbf5ef] border-[#c28551] text-[#844c1d] shadow-xs ring-1 ring-[#c28551]/30 glow-terracotta'
-                    : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex items-center gap-1.5 font-bold text-xs text-slate-900">
-                  <UserCheck className="w-4 h-4 text-[#c28551]" />
-                  <span>Individual Employee</span>
-                </div>
-                <div className="text-[10px] text-slate-500 mt-0.5">Primary work laptop / phone</div>
-              </button>
-
-              <button
-                type="button"
                 onClick={() => setAssignmentType('TEMPORARY_BORROW')}
                 className={`p-3.5 rounded-xl border text-left transition btn-press-sm cursor-pointer ${
                   assignmentType === 'TEMPORARY_BORROW'
@@ -225,9 +250,103 @@ export const AssignModal: React.FC<AssignModalProps> = ({
             </div>
           </div>
 
-          {/* Form Fields */}
+          {/* Custodian & Handover Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Custodian / Person Name <span className="text-[#c28551]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={assignedToName}
+                onChange={(e) => setAssignedToName(e.target.value)}
+                placeholder="e.g. Kaveen Dias, Senuri Perera"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Designation of the Person <span className="text-[#c28551]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={assignedToRole}
+                onChange={(e) => setAssignedToRole(e.target.value)}
+                placeholder="e.g. Senior Accountant, Store Manager"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Department of the Person <span className="text-[#c28551]">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomDept(!isCustomDept)}
+                  className="text-[10px] font-semibold text-[#c28551] hover:underline cursor-pointer"
+                >
+                  {isCustomDept ? 'Select from List' : '+ Custom Dept'}
+                </button>
+              </div>
+              {isCustomDept ? (
+                <input
+                  type="text"
+                  required
+                  value={customDepartment}
+                  onChange={(e) => setCustomDepartment(e.target.value)}
+                  placeholder="Enter department name..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+                />
+              ) : (
+                <select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition cursor-pointer"
+                >
+                  {departments.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Contact Number of the Person <span className="text-[#c28551]">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={assignedToContact}
+                onChange={(e) => setAssignedToContact(e.target.value)}
+                placeholder="e.g. 077 123 4567"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Condition of the Item <span className="text-[#c28551]">*</span>
+              </label>
+              <select
+                value={conditionAtHandover}
+                onChange={(e) => setConditionAtHandover(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition cursor-pointer"
+              >
+                <option value="Brand New">Brand New (Factory Sealed)</option>
+                <option value="Used - Like New">Used - Like New (Mint)</option>
+                <option value="Used - Good">Used - Good</option>
+                <option value="Used - Fair">Used - Fair</option>
+                <option value="Damaged / Needs Repair">Refurbished / Serviced</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Branch / Location <span className="text-[#c28551]">*</span>
@@ -235,7 +354,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               <select
                 value={locationOrBranch}
                 onChange={(e) => setLocationOrBranch(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition cursor-pointer"
+                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition cursor-pointer"
               >
                 {branches.map(b => (
                   <option key={b.id} value={b.name}>{b.name}</option>
@@ -243,64 +362,9 @@ export const AssignModal: React.FC<AssignModalProps> = ({
               </select>
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Department
-              </label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition cursor-pointer"
-              >
-                {departments.map(d => (
-                  <option key={d.id} value={d.name}>{d.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Custodian Name <span className="text-[#c28551]">*</span>
-              </label>
-              <input
-                type="text"
-                required
-                value={assignedToName}
-                onChange={(e) => setAssignedToName(e.target.value)}
-                placeholder="e.g. Kaveen Dias, POS Counter 2"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Designation / Role
-              </label>
-              <input
-                type="text"
-                value={assignedToRole}
-                onChange={(e) => setAssignedToRole(e.target.value)}
-                placeholder="e.g. Lead Video Producer"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Contact Phone / Email
-              </label>
-              <input
-                type="text"
-                value={assignedToContact}
-                onChange={(e) => setAssignedToContact(e.target.value)}
-                placeholder="077 123 4567 • name@cosmetics.lk"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-xs focus:ring-2 focus:ring-[#c28551]/20 focus:border-[#c28551] focus:bg-white transition"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Handover Date
+                Handover Date <span className="text-[#c28551]">*</span>
               </label>
               <input
                 type="date"
@@ -332,7 +396,7 @@ export const AssignModal: React.FC<AssignModalProps> = ({
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Deployment Purpose & Handover Notes
+              Deployment Purpose &amp; Handover Notes
             </label>
             <textarea
               rows={2}

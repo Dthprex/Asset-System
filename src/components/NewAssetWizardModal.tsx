@@ -106,12 +106,15 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
 
   // Deployment
   const [assignImmediately, setAssignImmediately] = useState(false);
-  const [assignmentType, setAssignmentType] = useState<'LOCATION_SHOWROOM' | 'DEPARTMENT_SHARED' | 'PERMANENT_EMPLOYEE' | 'TEMPORARY_BORROW'>('LOCATION_SHOWROOM');
+  const [assignmentType, setAssignmentType] = useState<'LOCATION_SHOWROOM' | 'DEPARTMENT_SHARED' | 'PERMANENT_EMPLOYEE' | 'TEMPORARY_BORROW'>('PERMANENT_EMPLOYEE');
   const [assignedToName, setAssignedToName] = useState('');
   const [assignedToRole, setAssignedToRole] = useState('');
   const [assignedToContact, setAssignedToContact] = useState('');
-  const [locationOrBranch, setLocationOrBranch] = useState(branches[0]?.name || 'Colombo Flagship Showroom');
-  const [department, setDepartment] = useState(departments[0]?.name || 'Retail Showrooms & Operations');
+  const [locationOrBranch, setLocationOrBranch] = useState(branches[0]?.name || 'Pepiliyana Head Office');
+  const [department, setDepartment] = useState(departments[0]?.name || 'Digital Marketing & Content Creation');
+  const [customDepartment, setCustomDepartment] = useState('');
+  const [isCustomDept, setIsCustomDept] = useState(false);
+  const [assignedDate, setAssignedDate] = useState(new Date().toISOString().slice(0, 10));
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
   const [purpose, setPurpose] = useState('');
 
@@ -119,7 +122,10 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     if (branches.length > 0 && (!locationOrBranch || !branches.some((b) => b.name === locationOrBranch))) {
       setLocationOrBranch(branches[0].name);
     }
-  }, [branches, locationOrBranch]);
+    if (departments.length > 0 && !isCustomDept && (!department || !departments.some((d) => d.name === department))) {
+      setDepartment(departments[0].name);
+    }
+  }, [branches, departments, locationOrBranch, department, isCustomDept]);
 
   if (!isOpen) return null;
 
@@ -166,10 +172,13 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
     setImages(['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800&auto=format&fit=crop&q=80']);
     setInvoiceDoc('/uploads/sample-invoice-macbook.svg');
     setAssignImmediately(false);
-    setAssignmentType('LOCATION_SHOWROOM');
+    setAssignmentType('PERMANENT_EMPLOYEE');
     setAssignedToName('');
     setAssignedToRole('');
     setAssignedToContact('');
+    setCustomDepartment('');
+    setIsCustomDept(false);
+    setAssignedDate(new Date().toISOString().slice(0, 10));
     setExpectedReturnDate('');
     setPurpose('');
     setError(null);
@@ -177,6 +186,28 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
 
   const handleSubmit = async () => {
     setError(null);
+
+    const finalDepartment = isCustomDept ? customDepartment.trim() : department;
+
+    if (assignImmediately) {
+      if (!assignedToName.trim()) {
+        setError('Please enter the Custodian / Person Name receiving this item');
+        return;
+      }
+      if (!assignedToRole.trim()) {
+        setError('Please enter the Designation of the person receiving this item');
+        return;
+      }
+      if (!finalDepartment) {
+        setError('Please select or enter the Department of the person');
+        return;
+      }
+      if (!assignedToContact.trim()) {
+        setError('Please enter the Contact Number of the person receiving this item');
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -214,13 +245,14 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
           assignedToName: assignedToName.trim() || locationOrBranch,
           assignedToRole: assignedToRole.trim() || 'Authorized Custodian',
           assignedToContact: assignedToContact.trim(),
-          assignedDate: purchaseDate || new Date().toISOString().slice(0, 10),
+          assignedDate: assignedDate || purchaseDate || new Date().toISOString().slice(0, 10),
           expectedReturnDate:
             assignmentType === 'TEMPORARY_BORROW'
               ? expectedReturnDate || defaultReturn
               : '',
           locationOrBranch,
-          department,
+          department: finalDepartment,
+          conditionAtHandover: condition,
           purpose: purpose.trim() || 'Initial deployment upon procurement intake',
         };
       }
@@ -644,7 +676,7 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-[#1d2939]">Deploy Hardware Immediately</h4>
-                    <p className="text-[11px] text-slate-500">Deploy directly to a showroom, department, or temporary loan</p>
+                    <p className="text-[11px] text-slate-500">Hand over directly to an employee, showroom, department, or temporary loan</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input
@@ -661,25 +693,29 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                   <div className="pt-3 border-t border-[#f0e6de] space-y-3">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deployment Mode</label>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Deployment Mode <span className="text-[#c28551]">*</span>
+                        </label>
                         <select
                           value={assignmentType}
                           onChange={(e) => setAssignmentType(e.target.value as any)}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs cursor-pointer"
                         >
+                          <option value="PERMANENT_EMPLOYEE">Permanent Employee Allocation</option>
                           <option value="LOCATION_SHOWROOM">Permanent Showroom Deployment</option>
                           <option value="DEPARTMENT_SHARED">Department Shared Asset</option>
-                          <option value="PERMANENT_EMPLOYEE">Permanent Employee Allocation</option>
                           <option value="TEMPORARY_BORROW">Temporary Borrow / Loan</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Location / Branch</label>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Location / Branch <span className="text-[#c28551]">*</span>
+                        </label>
                         <select
                           value={locationOrBranch}
                           onChange={(e) => setLocationOrBranch(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs cursor-pointer"
                         >
                           {branches.map(b => (
                             <option key={b.id} value={b.name}>{b.name}</option>
@@ -688,19 +724,112 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                       </div>
 
                       <div>
-                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Custodian / Holder Name</label>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Custodian / Person Name <span className="text-[#c28551]">*</span>
+                        </label>
                         <input
                           type="text"
                           value={assignedToName}
                           onChange={(e) => setAssignedToName(e.target.value)}
-                          placeholder="e.g. Senuri Wickramasinghe, POS 1"
+                          placeholder="e.g. Senuri Wickramasinghe, Kaveen Dias"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Designation of the Person <span className="text-[#c28551]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={assignedToRole}
+                          onChange={(e) => setAssignedToRole(e.target.value)}
+                          placeholder="e.g. Senior Accountant, Store Manager"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-700">
+                            Department of the Person <span className="text-[#c28551]">*</span>
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setIsCustomDept(!isCustomDept)}
+                            className="text-[10px] font-semibold text-[#c28551] hover:underline cursor-pointer"
+                          >
+                            {isCustomDept ? 'Select from List' : '+ Custom Dept'}
+                          </button>
+                        </div>
+                        {isCustomDept ? (
+                          <input
+                            type="text"
+                            value={customDepartment}
+                            onChange={(e) => setCustomDepartment(e.target.value)}
+                            placeholder="Enter department name..."
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                          />
+                        ) : (
+                          <select
+                            value={department}
+                            onChange={(e) => setDepartment(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs cursor-pointer"
+                          >
+                            {departments.map(d => (
+                              <option key={d.id} value={d.name}>{d.name}</option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Contact Number of the Person <span className="text-[#c28551]">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={assignedToContact}
+                          onChange={(e) => setAssignedToContact(e.target.value)}
+                          placeholder="e.g. 077 123 4567"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Condition of the Item <span className="text-[#c28551]">*</span>
+                        </label>
+                        <select
+                          value={condition}
+                          onChange={(e) => setCondition(e.target.value as AssetCondition)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs cursor-pointer"
+                        >
+                          <option value="Brand New">Brand New (Factory Sealed)</option>
+                          <option value="Used - Like New">Used - Like New (Mint)</option>
+                          <option value="Used - Good">Used - Good</option>
+                          <option value="Used - Fair">Used - Fair</option>
+                          <option value="Damaged / Needs Repair">Refurbished / Serviced</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Handover Date <span className="text-[#c28551]">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={assignedDate}
+                          onChange={(e) => setAssignedDate(e.target.value)}
                           className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
                         />
                       </div>
 
                       {assignmentType === 'TEMPORARY_BORROW' && (
-                        <div>
-                          <label className="block text-[11px] font-semibold text-amber-700 mb-1">Scheduled Return Date</label>
+                        <div className="sm:col-span-2">
+                          <label className="block text-[11px] font-semibold text-amber-700 mb-1">
+                            Scheduled Return Date <span className="text-amber-700">*</span>
+                          </label>
                           <input
                             type="date"
                             value={expectedReturnDate}
@@ -712,12 +841,12 @@ export const NewAssetWizardModal: React.FC<NewAssetWizardModalProps> = ({
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deployment Notes</label>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Deployment / Handover Notes</label>
                       <input
                         type="text"
                         value={purpose}
                         onChange={(e) => setPurpose(e.target.value)}
-                        placeholder="e.g. Colombo flagship showroom cashier stand"
+                        placeholder="e.g. Handed over with charger brick, cable, and carrying sleeve"
                         className="w-full px-3 py-2 rounded-xl bg-white border border-[#f0e6de] text-[#1d2939] text-xs"
                       />
                     </div>

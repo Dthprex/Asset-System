@@ -417,6 +417,29 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
   // If initial assignment was provided upon intake, record it too
   let assignHistory: CustodyRecord | null = null;
   if (newAsset.currentAssignment) {
+    const handoverCondition =
+      (newAsset.currentAssignment.conditionAtHandover as any) || newAsset.condition;
+    newAsset.condition = handoverCondition;
+    newAsset.currentAssignment = {
+      ...newAsset.currentAssignment,
+      conditionAtHandover: handoverCondition,
+    };
+
+    const metaParts: string[] = [];
+    if (newAsset.currentAssignment.assignedToRole) {
+      metaParts.push(`Designation: ${newAsset.currentAssignment.assignedToRole}`);
+    }
+    if (newAsset.currentAssignment.department) {
+      metaParts.push(`Dept: ${newAsset.currentAssignment.department}`);
+    }
+    if (newAsset.currentAssignment.assignedToContact) {
+      metaParts.push(`Contact: ${newAsset.currentAssignment.assignedToContact}`);
+    }
+    if (handoverCondition) {
+      metaParts.push(`Condition: ${handoverCondition}`);
+    }
+    const metaSuffix = metaParts.length > 0 ? ` [${metaParts.join(' • ')}]` : '';
+
     assignHistory = {
       id: `HIS-${(Date.now() + 1).toString().slice(-6)}`,
       assetId: newId,
@@ -429,7 +452,8 @@ export async function createAsset(newAssetData: Omit<Asset, 'id' | 'createdAt' |
       previousHolder: 'cosmetics.lk IT Central Inventory',
       newHolder: `${newAsset.currentAssignment.assignedToName} (${newAsset.currentAssignment.locationOrBranch})`,
       assignmentType: newAsset.currentAssignment.assignmentType,
-      notes: newAsset.currentAssignment.purpose || 'Initial deployment assignment upon intake.',
+      conditionUponReturn: handoverCondition,
+      notes: `${newAsset.currentAssignment.purpose || 'Initial deployment assignment upon intake.'}${metaSuffix}`,
     };
     db.custodyHistory.unshift(assignHistory);
   }
@@ -642,11 +666,23 @@ export async function assignAsset(
   const newHolder = `${assignment.assignedToName} (${assignment.locationOrBranch})`;
   const isBorrow = assignment.assignmentType === 'TEMPORARY_BORROW';
   const newStatus = isBorrow ? 'BORROWED_TEMPORARY' : 'ALLOCATED_PERMANENT';
+  const handoverCondition = (assignment.conditionAtHandover as any) || asset.condition;
 
   // Update Asset
   asset.status = newStatus;
-  asset.currentAssignment = assignment;
+  asset.condition = handoverCondition;
+  asset.currentAssignment = {
+    ...assignment,
+    conditionAtHandover: handoverCondition,
+  };
   asset.updatedAt = new Date().toISOString();
+
+  const metaParts: string[] = [];
+  if (assignment.assignedToRole) metaParts.push(`Designation: ${assignment.assignedToRole}`);
+  if (assignment.department) metaParts.push(`Dept: ${assignment.department}`);
+  if (assignment.assignedToContact) metaParts.push(`Contact: ${assignment.assignedToContact}`);
+  if (handoverCondition) metaParts.push(`Condition: ${handoverCondition}`);
+  const metaSuffix = metaParts.length > 0 ? ` [${metaParts.join(' • ')}]` : '';
 
   // Add History Record
   const newHistory: CustodyRecord = {
@@ -658,7 +694,8 @@ export async function assignAsset(
     previousHolder,
     newHolder,
     assignmentType: assignment.assignmentType,
-    notes: `${assignment.purpose || 'Assigned'}. ${isBorrow && assignment.expectedReturnDate ? `Expected return: ${assignment.expectedReturnDate}` : ''}`,
+    conditionUponReturn: handoverCondition,
+    notes: `${assignment.purpose || 'Assigned'}.${isBorrow && assignment.expectedReturnDate ? ` Expected return: ${assignment.expectedReturnDate}.` : ''}${metaSuffix}`,
   };
 
   if (index !== -1) {

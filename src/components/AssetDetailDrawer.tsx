@@ -551,10 +551,31 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                   </div>
                   
                   {asset.currentAssignment && (
-                    <div className="text-xs opacity-90 mt-1">
-                      <span>{asset.currentAssignment.locationOrBranch} • {asset.currentAssignment.department}</span>
+                    <div className="text-xs opacity-95 mt-2 space-y-1.5 pt-2 border-t border-black/10">
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
+                        <div>
+                          <span className="opacity-65">Designation: </span>
+                          <span className="font-semibold">{asset.currentAssignment.assignedToRole || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="opacity-65">Department: </span>
+                          <span className="font-semibold">{asset.currentAssignment.department || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="opacity-65">Contact No: </span>
+                          <span className="font-mono font-semibold">{asset.currentAssignment.assignedToContact || 'N/A'}</span>
+                        </div>
+                        <div>
+                          <span className="opacity-65">Condition: </span>
+                          <span className="font-semibold">{asset.currentAssignment.conditionAtHandover || asset.condition}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="opacity-65">Location / Branch: </span>
+                          <span className="font-semibold">{asset.currentAssignment.locationOrBranch}</span>
+                        </div>
+                      </div>
                       {asset.currentAssignment.expectedReturnDate && (
-                        <div className="font-semibold text-amber-700 mt-0.5">
+                        <div className="font-semibold text-amber-700 pt-1">
                           Scheduled Due Date: {formatDate(asset.currentAssignment.expectedReturnDate)}
                         </div>
                       )}
@@ -592,11 +613,18 @@ export const AssetDetailDrawer: React.FC<AssetDetailDrawerProps> = ({
                                 : 'bg-[#fdfbf9] border-[#f0e6de] text-slate-700'
                             }`}>
                               <div className="flex items-center justify-between mb-1.5">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                  isDamage ? 'bg-rose-100 text-rose-800' : isReturn ? 'bg-blue-100 text-blue-800' : 'bg-[#faece2] text-[#c28551]'
-                                }`}>
-                                  {record.action.replace('_', ' ')}
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    isDamage ? 'bg-rose-100 text-rose-800' : isReturn ? 'bg-blue-100 text-blue-800' : 'bg-[#faece2] text-[#c28551]'
+                                  }`}>
+                                    {record.action.replace('_', ' ')}
+                                  </span>
+                                  {record.conditionUponReturn && (
+                                    <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-white border border-[#ead7c7] text-slate-700">
+                                      Condition: {record.conditionUponReturn}
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="font-mono text-slate-500 text-[11px]">{formatDate(record.date)}</span>
                               </div>
 

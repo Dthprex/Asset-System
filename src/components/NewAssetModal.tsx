@@ -489,9 +489,9 @@ export const NewAssetModal: React.FC<NewAssetModalProps> = ({
                       onChange={(e) => setAssignmentType(e.target.value as any)}
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
                     >
+                      <option value="PERMANENT_EMPLOYEE">Permanent Employee Allocation</option>
                       <option value="LOCATION_SHOWROOM">Permanent Showroom Deployment</option>
                       <option value="DEPARTMENT_SHARED">Department Shared Asset</option>
-                      <option value="PERMANENT_EMPLOYEE">Permanent Employee Allocation</option>
                       <option value="TEMPORARY_BORROW">Temporary Borrow / Loan</option>
                     </select>
                   </div>
@@ -513,15 +513,73 @@ export const NewAssetModal: React.FC<NewAssetModalProps> = ({
 
                   <div>
                     <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                      Custodian / Holder Name
+                      Custodian / Person Name
                     </label>
                     <input
                       type="text"
                       value={assignedToName}
                       onChange={(e) => setAssignedToName(e.target.value)}
-                      placeholder="e.g. Senuri Wickramasinghe, POS Counter 1"
+                      placeholder="e.g. Senuri Wickramasinghe, Kaveen Dias"
                       className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Designation of the Person
+                    </label>
+                    <input
+                      type="text"
+                      value={assignedToRole}
+                      onChange={(e) => setAssignedToRole(e.target.value)}
+                      placeholder="e.g. Senior Accountant, Store Manager"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Department of the Person
+                    </label>
+                    <select
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
+                    >
+                      {departments.map(d => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Contact Number of the Person
+                    </label>
+                    <input
+                      type="text"
+                      value={assignedToContact}
+                      onChange={(e) => setAssignedToContact(e.target.value)}
+                      placeholder="e.g. 077 123 4567"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      Condition of the Item
+                    </label>
+                    <select
+                      value={condition}
+                      onChange={(e) => setCondition(e.target.value as AssetCondition)}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-100 text-xs"
+                    >
+                      <option value="Brand New">Brand New (Factory Sealed)</option>
+                      <option value="Used - Like New">Used - Like New (Mint)</option>
+                      <option value="Used - Good">Used - Good Condition</option>
+                      <option value="Used - Fair">Used - Fair Condition</option>
+                      <option value="Damaged / Needs Repair">Refurbished / Serviced</option>
+                    </select>
                   </div>
 
                   {assignmentType === 'TEMPORARY_BORROW' && (

@@ -56,6 +56,7 @@ export interface CurrentAssignment {
   expectedReturnDate?: string;
   locationOrBranch: string;
   department: string;
+  conditionAtHandover?: AssetCondition | string;
   purpose: string;
   notes?: string;
 }
